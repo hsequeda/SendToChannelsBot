@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"net/http"
 	"os"
-
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 var bot *tgbotapi.BotAPI
@@ -33,10 +32,15 @@ func init() {
 func main() {
 	fmt.Println("Started")
 	for update := range bot.ListenForWebhook("/") {
-		_, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text))
-		if err != nil {
-			println(err.Error())
+		if update.Message.Entities != nil {
+			for _, entity := range *update.Message.Entities {
+				if entity.Type == "hashtag" {
+					_, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text[entity.Offset:entity.Length+entity.Offset]))
+					if err != nil {
+						println(err.Error())
+					}
+				}
+			}
 		}
-		fmt.Printf("%#v \n", update.Message)
 	}
 }

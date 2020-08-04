@@ -33,6 +33,9 @@ func init() {
 func main() {
 	fmt.Println("Started")
 	for update := range bot.ListenForWebhook("/") {
-		fmt.Printf("%#v", update.Message)
+		_, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text))
+		if err != nil {
+			println(err.Error())
+		}
 	}
 }

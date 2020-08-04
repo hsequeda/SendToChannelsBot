@@ -37,5 +37,6 @@ func main() {
 		if err != nil {
 			println(err.Error())
 		}
+		fmt.Printf("%#v \n", update.Message)
 	}
 }

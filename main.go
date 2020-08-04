@@ -31,6 +31,7 @@ func init() {
 }
 
 func main() {
+	fmt.Println("Started")
 	for update := range bot.ListenForWebhook("/") {
 		fmt.Printf("%#v", update.Message)
 	}

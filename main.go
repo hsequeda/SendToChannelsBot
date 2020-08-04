@@ -18,6 +18,7 @@ func init() {
 		panic(err)
 	}
 	webHookPath := os.Getenv("WEBHOOK_PATH")
+	println(webHookPath)
 	resp, err := bot.SetWebhook(tgbotapi.NewWebhook(webHookPath))
 	if err != nil {
 		panic(err)

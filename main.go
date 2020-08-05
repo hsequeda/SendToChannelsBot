@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
+	"strconv"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
@@ -72,14 +75,24 @@ func resolveUpdate(update *tgbotapi.Update) {
 }
 
 func resolveMessage(message *tgbotapi.Message) {
-	for _, entity := range *message.Entities {
-		switch entity.Type {
-		case HashtagType:
-			resolveHashtagType(message, &entity)
-		case CommandType:
 
-		default:
+	switch {
+	case regexp.MustCompile(`(?m)^\/list( \w+|$)`).MatchString(message.Text):
+		adminId := os.Getenv(ADMIN_ID)
+		if strconv.FormatInt(message.Chat.ID, 10) == adminId {
+			bot.Send(tgbotapi.NewMessage(message.Chat.ID, getAllData()))
+		}
 
+	default:
+		for _, entity := range *message.Entities {
+			switch entity.Type {
+			case HashtagType:
+				resolveHashtagType(message, &entity)
+			case CommandType:
+
+			default:
+
+			}
 		}
 	}
 }
@@ -151,10 +164,21 @@ func resolveHashtagType(message *tgbotapi.Message, entity *tgbotapi.MessageEntit
 }
 
 func resolveCommandType(message *tgbotapi.Message, entity *tgbotapi.MessageEntity) {
-	command := message.Text[entity.Offset : entity.Length+entity.Offset]
-	if command[0] == ' ' {
-		command = message.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
-	}
 
 }
 
+func getAllData() string {
+	result := map[int64][]string{}
+	for key, value := range info {
+		for _, value2 := range value {
+			result[value2] = append(result[value2], key)
+		}
+	}
+
+	var result2 string
+	for key, value := range result {
+		result2 += fmt.Sprintf("%d-> %s \n", key, strings.Join(value, ", "))
+	}
+
+	return result2
+}

@@ -82,14 +82,14 @@ func resolveMessage(message *tgbotapi.Message) {
 					}
 				}
 			} else {
-				if _, err := bot.Send(
-					tgbotapi.NewMessage(
-						message.Chat.ID,
-						fmt.Sprintf("Hashtag: %s isn't added", hashtag),
-					),
-				); err != nil {
-					fmt.Println(err.Error())
-				}
+				// if _, err := bot.Send(
+				// 	tgbotapi.NewMessage(
+				// 		message.Chat.ID,
+				// 		fmt.Sprintf("Hashtag: %s isn't added", hashtag),
+				// 	),
+				// ); err != nil {
+				// 	fmt.Println(err.Error())
+				// }
 			}
 		}
 	}

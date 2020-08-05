@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"net/http"
 	"os"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
 var bot *tgbotapi.BotAPI
@@ -33,29 +34,33 @@ func main() {
 	fmt.Println("Started")
 	for update := range bot.ListenForWebhook("/") {
 		fmt.Printf("%#v \n", update)
-		if update.Message != nil && update.Message.Entities != nil {
-			for _, entity := range *update.Message.Entities {
-				if entity.Type == "hashtag" {
-					_, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text[entity.Offset:entity.Length+entity.Offset]))
-					if err != nil {
-						println(err.Error())
-					}
-				}
+		resolveUpdate(&update)
+	}
+}
 
+func resolveUpdate(update *tgbotapi.Update) {
+	switch {
+	case update.Message != nil && update.Message.Entities != nil:
+		resolveMessage(update.Message)
+	case update.ChannelPost != nil && update.ChannelPost.Entities != nil:
+		for _, entity := range *update.ChannelPost.Entities {
+			if entity.Type == "hashtag" {
+				_, err := bot.Send(tgbotapi.NewMessage(update.ChannelPost.Chat.ID, update.ChannelPost.Text[entity.Offset:entity.Length+entity.Offset]))
+				if err != nil {
+					println(err.Error())
+				}
 			}
-			continue
 		}
+	}
+}
 
-		if update.ChannelPost != nil && update.ChannelPost.Entities != nil {
-			for _, entity := range *update.ChannelPost.Entities {
-				if entity.Type == "hashtag" {
-					_, err := bot.Send(tgbotapi.NewMessage(update.ChannelPost.Chat.ID, update.ChannelPost.Text[entity.Offset:entity.Length+entity.Offset]))
-					if err != nil {
-						println(err.Error())
-					}
-				}
+func resolveMessage(message *tgbotapi.Message) {
+	for _, entity := range *message.Entities {
+		if entity.Type == "hashtag" {
+			_, err := bot.Send(tgbotapi.NewMessage(message.Chat.ID, message.Text[entity.Offset:entity.Length+entity.Offset]))
+			if err != nil {
+				println(err.Error())
 			}
-			continue
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -60,6 +61,9 @@ func main() {
 }
 
 func resolveUpdate(update *tgbotapi.Update) {
+	b, _ := json.Marshal(update)
+	fmt.Printf("%#v\n\n", string(b))
+
 	switch {
 	case update.Message != nil &&
 		update.Message.Entities != nil:
@@ -136,12 +140,9 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 }
 
 func resolveHashtagType(message *tgbotapi.Message, entity *tgbotapi.MessageEntity) {
-	hashtag := message.Text[entity.Offset : entity.Length+entity.Offset]
-	if hashtag[0] == ' ' {
-		hashtag = message.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
-	}
-	if _, exist := info[hashtag]; exist {
-		for _, channelId := range info[hashtag] {
+	hashtag := []rune(message.Text)[entity.Offset : entity.Length+entity.Offset]
+	if _, exist := info[string(hashtag)]; exist {
+		for _, channelId := range info[string(hashtag)] {
 			_, err := bot.Send(tgbotapi.NewMessage(channelId, message.Text))
 			if err != nil {
 				fmt.Println(err.Error())
@@ -194,4 +195,3 @@ func getUpdateCh() (tgbotapi.UpdatesChannel, error) {
 		})
 	}
 }
-

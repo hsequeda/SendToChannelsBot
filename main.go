@@ -40,7 +40,21 @@ func main() {
 						println(err.Error())
 					}
 				}
+
 			}
+			continue
+		}
+
+		if update.ChannelPost.Entities != nil {
+			for _, entity := range *update.ChannelPost.Entities {
+				if entity.Type == "hashtag" {
+					_, err := bot.Send(tgbotapi.NewMessage(update.ChannelPost.Chat.ID, update.ChannelPost.Text[entity.Offset:entity.Length+entity.Offset]))
+					if err != nil {
+						println(err.Error())
+					}
+				}
+			}
+			continue
 		}
 	}
 }

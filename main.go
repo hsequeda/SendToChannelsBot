@@ -13,6 +13,8 @@ const (
 	BOT_TOKEN    = "BOT_TOKEN"
 	WEBHOOK_PATH = "WEBHOOK_PATH"
 	HashtagType  = "hashtag"
+	CommandType  = "command"
+	ADMIN_ID     = "ADMIN_ID"
 )
 
 var bot *tgbotapi.BotAPI
@@ -60,8 +62,10 @@ func main() {
 
 func resolveUpdate(update *tgbotapi.Update) {
 	switch {
-	case update.Message != nil && update.Message.Entities != nil:
+	case update.Message != nil &&
+		update.Message.Entities != nil:
 		resolveMessage(update.Message)
+
 	case update.ChannelPost != nil:
 		resolveChannelPost(update.ChannelPost)
 	}
@@ -69,28 +73,13 @@ func resolveUpdate(update *tgbotapi.Update) {
 
 func resolveMessage(message *tgbotapi.Message) {
 	for _, entity := range *message.Entities {
-		if entity.Type == HashtagType {
-			hashtag := message.Text[entity.Offset : entity.Length+entity.Offset]
-			if hashtag[0] == ' ' {
-				hashtag = message.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
-			}
-			if _, exist := info[hashtag]; exist {
-				for _, channelId := range info[hashtag] {
-					_, err := bot.Send(tgbotapi.NewMessage(channelId, message.Text))
-					if err != nil {
-						fmt.Println(err.Error())
-					}
-				}
-			} else {
-				if _, err := bot.Send(
-					tgbotapi.NewMessage(
-						message.Chat.ID,
-						fmt.Sprintf("Hashtag: %s isn't added", hashtag),
-					),
-				); err != nil {
-					fmt.Println(err.Error())
-				}
-			}
+		switch entity.Type {
+		case HashtagType:
+			resolveHashtagType(message, &entity)
+		case CommandType:
+
+		default:
+
 		}
 	}
 }
@@ -135,5 +124,37 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 	// 		}
 	// 	}
 	// }
+}
+
+func resolveHashtagType(message *tgbotapi.Message, entity *tgbotapi.MessageEntity) {
+	hashtag := message.Text[entity.Offset : entity.Length+entity.Offset]
+	if hashtag[0] == ' ' {
+		hashtag = message.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
+	}
+	if _, exist := info[hashtag]; exist {
+		for _, channelId := range info[hashtag] {
+			_, err := bot.Send(tgbotapi.NewMessage(channelId, message.Text))
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		}
+	} else {
+		if _, err := bot.Send(
+			tgbotapi.NewMessage(
+				message.Chat.ID,
+				fmt.Sprintf("Hashtag: %s isn't added", hashtag),
+			),
+		); err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+}
+
+func resolveCommandType(message *tgbotapi.Message, entity *tgbotapi.MessageEntity) {
+	command := message.Text[entity.Offset : entity.Length+entity.Offset]
+	if command[0] == ' ' {
+		command = message.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
+	}
+
 }
 

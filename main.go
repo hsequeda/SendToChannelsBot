@@ -44,21 +44,17 @@ func init() {
 		panic(err)
 	}
 
-	webHookPath := os.Getenv(WEBHOOK_PATH)
-	resp, err := bot.SetWebhook(tgbotapi.NewWebhook(webHookPath))
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("%#v", resp)
-
 	port := os.Getenv(PORT)
 	go http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 }
 
 func main() {
 	fmt.Println("Started")
-	for update := range bot.ListenForWebhook("/") {
+	updates, err := getUpdateCh()
+	if err != nil {
+		panic(err)
+	}
+	for update := range updates {
 		resolveUpdate(&update)
 	}
 }
@@ -151,15 +147,6 @@ func resolveHashtagType(message *tgbotapi.Message, entity *tgbotapi.MessageEntit
 				fmt.Println(err.Error())
 			}
 		}
-	} else {
-		// if _, err := bot.Send(
-		// 	tgbotapi.NewMessage(
-		// 		message.Chat.ID,
-		// 		fmt.Sprintf("Hashtag: %s isn't added", hashtag),
-		// 	),
-		// ); err != nil {
-		// 	fmt.Println(err.Error())
-		// }
 	}
 }
 
@@ -177,8 +164,34 @@ func getAllData() string {
 
 	var result2 string
 	for key, value := range result {
-		result2 += fmt.Sprintf("%d-> %s \n", key, strings.Join(value, ", "))
+		chat, err := bot.GetChat(tgbotapi.ChatConfig{
+			ChatID: key,
+		})
+
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		result2 += fmt.Sprintf("%s-> %s \n", chat.UserName, strings.Join(value, ", "))
 	}
 
 	return result2
 }
+
+func getUpdateCh() (tgbotapi.UpdatesChannel, error) {
+	webhookPath := os.Getenv(WEBHOOK_PATH)
+	if webhookPath != "" {
+		_, err := bot.SetWebhook(tgbotapi.NewWebhook(webhookPath))
+		if err != nil {
+			panic(err)
+		}
+
+		return bot.ListenForWebhook("/"), nil
+	} else {
+		return bot.GetUpdatesChan(tgbotapi.UpdateConfig{
+			Offset:  0,
+			Timeout: 0,
+		})
+	}
+}
+

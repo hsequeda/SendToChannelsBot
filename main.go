@@ -96,43 +96,43 @@ func resolveMessage(message *tgbotapi.Message) {
 }
 
 func resolveChannelPost(channelPost *tgbotapi.Message) {
-	if channelPost.Entities != nil {
-		for _, entity := range *channelPost.Entities {
-			if entity.Type == HashtagType {
-				hashtag := channelPost.Text[entity.Offset : entity.Offset+entity.Length]
-				if hashtag[0] == ' ' {
-					hashtag = channelPost.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
-				}
+	// if channelPost.Entities != nil {
+	// 	for _, entity := range *channelPost.Entities {
+	// 		if entity.Type == HashtagType {
+	// 			hashtag := channelPost.Text[entity.Offset : entity.Offset+entity.Length]
+	// 			if hashtag[0] == ' ' {
+	// 				hashtag = channelPost.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
+	// 			}
 
-				if _, exist := info[hashtag]; !exist {
-					info[hashtag] = append(info[hashtag], channelPost.Chat.ID)
-					_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", hashtag)))
-					if err != nil {
-						fmt.Println(err.Error())
-					}
-				} else {
-					exist := false
-					for _, channelId := range info[hashtag] {
-						if channelPost.Chat.ID == channelId {
-							exist = true
-							break
-						}
-					}
+	// 			if _, exist := info[hashtag]; !exist {
+	// 				info[hashtag] = append(info[hashtag], channelPost.Chat.ID)
+	// 				_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", hashtag)))
+	// 				if err != nil {
+	// 					fmt.Println(err.Error())
+	// 				}
+	// 			} else {
+	// 				exist := false
+	// 				for _, channelId := range info[hashtag] {
+	// 					if channelPost.Chat.ID == channelId {
+	// 						exist = true
+	// 						break
+	// 					}
+	// 				}
 
-					if !exist {
-						info[hashtag] = append(
-							info[hashtag], channelPost.Chat.ID)
-						_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", hashtag)))
-						if err != nil {
-							fmt.Println(err.Error())
-						}
-					}
-				}
-			}
+	// 				if !exist {
+	// 					info[hashtag] = append(
+	// 						info[hashtag], channelPost.Chat.ID)
+	// 					_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", hashtag)))
+	// 					if err != nil {
+	// 						fmt.Println(err.Error())
+	// 					}
+	// 				}
+	// 			}
+	// 		}
 
-			if err := db.Update(info); err != nil {
-				fmt.Println(err)
-			}
-		}
-	}
+	// 		if err := db.Update(info); err != nil {
+	// 			fmt.Println(err)
+	// 		}
+	// 	}
+	// }
 }

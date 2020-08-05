@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -11,17 +12,24 @@ import (
 )
 
 var bot *tgbotapi.BotAPI
-var db map[string][]string
+var db = make(map[string][]string)
 
 func init() {
 	file, err := os.OpenFile("./data.json", os.O_CREATE|os.O_RDWR, 0777)
 	if err != nil {
 		panic(err)
 	}
-	db := make(map[string][]string)
+
+	b, err := ioutil.ReadFile("./data.json")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(b))
 
 	if err = json.NewDecoder(file).Decode(&db); err != nil {
 		fmt.Println(err.Error())
+		db = make(map[string][]string, 0)
 	}
 
 	botToken := os.Getenv("BOT_TOKEN")
@@ -45,7 +53,6 @@ func init() {
 func main() {
 	fmt.Println("Started")
 	for update := range bot.ListenForWebhook("/") {
-		fmt.Printf("%#v \n", update)
 		resolveUpdate(&update)
 	}
 }
@@ -87,16 +94,35 @@ func resolveMessage(message *tgbotapi.Message) {
 
 func resolveChannelPost(channelPost *tgbotapi.Message) {
 	// adminId := os.Getenv("ADMIN_ID")
-	fmt.Printf("%#v", channelPost)
 	// if string(channelPost.From.ID) == adminId &&
 	if channelPost.Entities != nil {
 		for _, entity := range *channelPost.Entities {
 			if entity.Type == "hashtag" {
-				db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]] = append(
-					db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]], string(channelPost.Chat.ID))
-				_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", channelPost.Text[entity.Offset:entity.Offset+entity.Length])))
-				if err != nil {
-					fmt.Println(err.Error())
+				if _, exist := db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]]; !exist {
+					db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]] = make([]string, 0)
+					db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]] = append(db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]],
+						strconv.FormatInt(channelPost.Chat.ID, 10))
+					_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", channelPost.Text[entity.Offset:entity.Offset+entity.Length])))
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+				} else {
+					exist := false
+					for _, channelId := range db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]] {
+						if strconv.FormatInt(channelPost.Chat.ID, 10) == channelId {
+							exist = true
+							break
+						}
+					}
+
+					if !exist {
+						db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]] = append(
+							db[channelPost.Text[entity.Offset:entity.Offset+entity.Length]], strconv.FormatInt(channelPost.Chat.ID, 10))
+						_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", channelPost.Text[entity.Offset:entity.Offset+entity.Length])))
+						if err != nil {
+							fmt.Println(err.Error())
+						}
+					}
 				}
 			}
 
@@ -108,6 +134,12 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 			if err != nil {
 				fmt.Println(err.Error())
 			}
+
+			err = json.NewDecoder(file).Decode(&db)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			fmt.Println(db)
 
 			file.Close()
 		}

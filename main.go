@@ -140,7 +140,7 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 }
 
 func resolveHashtagType(message *tgbotapi.Message, entity *tgbotapi.MessageEntity) {
-	hashtag := []rune(message.Text)[entity.Offset : entity.Length+entity.Offset]
+	hashtag := []rune(strings.ToLower(message.Text))[entity.Offset : entity.Length+entity.Offset]
 	if _, exist := info[string(hashtag)]; exist {
 		for _, channelId := range info[string(hashtag)] {
 			_, err := bot.Send(tgbotapi.NewMessage(channelId, message.Text))

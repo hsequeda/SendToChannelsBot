@@ -143,7 +143,14 @@ func resolveHashtagType(message *tgbotapi.Message, entity *tgbotapi.MessageEntit
 	hashtag := []rune(strings.ToLower(message.Text))[entity.Offset : entity.Length+entity.Offset]
 	if _, exist := info[string(hashtag)]; exist {
 		for _, channelId := range info[string(hashtag)] {
-			_, err := bot.Send(tgbotapi.NewMessage(channelId, message.Text))
+			msg := tgbotapi.NewMessage(channelId, message.Text)
+			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonURL("Ir a mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+				),
+			)
+
+			_, err := bot.Send(msg)
 			if err != nil {
 				fmt.Println(err.Error())
 			}

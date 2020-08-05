@@ -32,7 +32,8 @@ func init() {
 func main() {
 	fmt.Println("Started")
 	for update := range bot.ListenForWebhook("/") {
-		if update.Message.Entities != nil {
+		fmt.Printf("%#v \n", update)
+		if update.Message != nil && update.Message.Entities != nil {
 			for _, entity := range *update.Message.Entities {
 				if entity.Type == "hashtag" {
 					_, err := bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text[entity.Offset:entity.Length+entity.Offset]))
@@ -45,7 +46,7 @@ func main() {
 			continue
 		}
 
-		if update.ChannelPost.Entities != nil {
+		if update.ChannelPost != nil && update.ChannelPost.Entities != nil {
 			for _, entity := range *update.ChannelPost.Entities {
 				if entity.Type == "hashtag" {
 					_, err := bot.Send(tgbotapi.NewMessage(update.ChannelPost.Chat.ID, update.ChannelPost.Text[entity.Offset:entity.Length+entity.Offset]))

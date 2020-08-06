@@ -248,28 +248,32 @@ func getMessageFromText(message *tgbotapi.Message) {
 	hashtagList := getHashtagList(message.Text, message.Entities)
 	channelIdList := getChannelList(hashtagList)
 	for _, chId := range channelIdList {
-		toSend := tgbotapi.NewMessage(chId, message.Text)
+		toSend := tgbotapi.NewMessage(chId, fmt.Sprintf("%s\n%s", message.Text, getRefLink(message.From)))
+		toSend.ParseMode = "html"
 		toSend.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
 			),
 		)
 
-		_, err := bot.Send(toSend)
+		msg, err := bot.Send(toSend)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
+		b, _ := json.Marshal(msg)
+		fmt.Println(string(b))
 	}
 }
 
 func getMessageFromCaption(message *tgbotapi.Message) {
 	hashtagList := getHashtagList(message.Caption, message.CaptionEntities)
 	channelIdList := getChannelList(hashtagList)
+	refLink := getRefLink(message.From)
 	for _, chId := range channelIdList {
 		var toSend tgbotapi.Chattable
 		if message.Photo != nil {
 			photoConfig := tgbotapi.NewPhotoShare(chId, message.Photo[0].FileID)
-			photoConfig.Caption = message.Caption
+			photoConfig.Caption = fmt.Sprintf("%s\n%s", message.Caption, refLink)
 			photoConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
@@ -280,7 +284,7 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 
 		if message.Audio != nil {
 			audioConfig := tgbotapi.NewAudioShare(chId, message.Audio.FileID)
-			audioConfig.Caption = message.Caption
+			audioConfig.Caption = fmt.Sprintf("%s\n%s", message.Caption, refLink)
 			audioConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
@@ -291,7 +295,7 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 
 		if message.Video != nil {
 			videoConfig := tgbotapi.NewVideoShare(chId, message.Video.FileID)
-			videoConfig.Caption = message.Caption
+			videoConfig.Caption = fmt.Sprintf("%s\n%s", message.Caption, refLink)
 			videoConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
@@ -302,7 +306,7 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 
 		if message.Document != nil {
 			documentConfig := tgbotapi.NewDocumentShare(chId, message.Document.FileID)
-			documentConfig.Caption = message.Caption
+			documentConfig.Caption = fmt.Sprintf("%s\n%s", message.Caption, refLink)
 			documentConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
@@ -317,4 +321,13 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 		}
 	}
 
+}
+
+func getRefLink(user *tgbotapi.User) string {
+	var name string
+	name = user.UserName
+	if user.UserName == "" {
+		name = user.FirstName
+	}
+	return fmt.Sprintf("\n <a href=\"tg://user?id=%d\">Hablar con autor👤(%s)</a> ", user.ID, name)
 }

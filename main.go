@@ -14,12 +14,14 @@ import (
 )
 
 const (
-	PORT         = "PORT"
-	BOT_TOKEN    = "BOT_TOKEN"
-	WEBHOOK_PATH = "WEBHOOK_PATH"
-	HashtagType  = "hashtag"
-	CommandType  = "command"
-	ADMIN_ID     = "ADMIN_ID"
+	PORT            = "PORT"
+	BOT_TOKEN       = "BOT_TOKEN"
+	WEBHOOK_PATH    = "WEBHOOK_PATH"
+	HashtagType     = "hashtag"
+	TextMentionType = "text_mention"
+	MentionType     = "mention"
+	CommandType     = "command"
+	ADMIN_ID        = "ADMIN_ID"
 )
 
 var bot *tgbotapi.BotAPI
@@ -247,8 +249,13 @@ func handleCommand(message *tgbotapi.Message) error {
 func getMessageFromText(message *tgbotapi.Message) {
 	hashtagList := getHashtagList(message.Text, message.Entities)
 	channelIdList := getChannelList(hashtagList)
+	var user *tgbotapi.User
+	user = message.From
+	if userMention, ok := getUserMention(message.Entities, []rune(message.Text)); ok {
+		user = userMention
+	}
 	for _, chId := range channelIdList {
-		toSend := tgbotapi.NewMessage(chId, fmt.Sprintf("%s\n%s", message.Text, getRefLink(message.From)))
+		toSend := tgbotapi.NewMessage(chId, fmt.Sprintf("%s\n%s", message.Text, getRefLink(user)))
 		toSend.ParseMode = "html"
 		toSend.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
@@ -268,7 +275,12 @@ func getMessageFromText(message *tgbotapi.Message) {
 func getMessageFromCaption(message *tgbotapi.Message) {
 	hashtagList := getHashtagList(message.Caption, message.CaptionEntities)
 	channelIdList := getChannelList(hashtagList)
-	refLink := getRefLink(message.From)
+	var user *tgbotapi.User
+	user = message.From
+	if userMention, ok := getUserMention(message.Entities, []rune(message.Caption)); ok {
+		user = userMention
+	}
+	refLink := getRefLink(user)
 	for _, chId := range channelIdList {
 		var toSend tgbotapi.Chattable
 		if message.Photo != nil {
@@ -325,9 +337,26 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 
 func getRefLink(user *tgbotapi.User) string {
 	var name string
+	var link string
 	name = user.UserName
+	link = fmt.Sprintf("http://t.me/%s", user.UserName)
 	if user.UserName == "" {
 		name = user.FirstName
+		link = fmt.Sprintf("tg://user?id=%d", user.ID)
 	}
-	return fmt.Sprintf("\n <a href=\"tg://user?id=%d\">Hablar con autor👤(%s)</a> ", user.ID, name)
+	return fmt.Sprintf("\n <a href=\"%s\">Escribir al autor👤(%s)</a> ", link, name)
+}
+
+func getUserMention(entities []tgbotapi.MessageEntity, text []rune) (*tgbotapi.User, bool) {
+	for _, entity := range entities {
+		if entity.Type == TextMentionType {
+			return entity.User, true
+		}
+		if entity.Type == MentionType {
+			return &tgbotapi.User{
+				UserName: string(text[entity.Offset+1 : entity.Offset+entity.Length]),
+			}, true
+		}
+	}
+	return nil, false
 }

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 const (
@@ -65,8 +65,7 @@ func resolveUpdate(update *tgbotapi.Update) {
 	fmt.Printf("%#v\n\n", string(b))
 
 	switch {
-	case update.Message != nil &&
-		update.Message.Entities != nil:
+	case update.Message != nil:
 		resolveMessage(update.Message)
 
 	case update.ChannelPost != nil:
@@ -75,7 +74,6 @@ func resolveUpdate(update *tgbotapi.Update) {
 }
 
 func resolveMessage(message *tgbotapi.Message) {
-
 	switch {
 	case regexp.MustCompile(`(?m)^\/list( \w+|$)`).MatchString(message.Text):
 		adminId := os.Getenv(ADMIN_ID)
@@ -83,17 +81,22 @@ func resolveMessage(message *tgbotapi.Message) {
 			bot.Send(tgbotapi.NewMessage(message.Chat.ID, getAllData()))
 		}
 
-	default:
-		for _, entity := range *message.Entities {
-			switch entity.Type {
-			case HashtagType:
-				resolveHashtagType(message, &entity)
-			case CommandType:
-
-			default:
-
-			}
+	case message.Entities != nil:
+		if containsHashtag(message.Entities) {
+			resolveHashtagType(message)
 		}
+	case message.CaptionEntities != nil:
+		// for _, entity := range message.CaptionEntities {
+		// 	switch entity.Type {
+		// 	case HashtagType:
+		// 		resolveHashtagType(message, &entity)
+		// 	case CommandType:
+
+		// 	default:
+
+		// 	}
+		// }
+	default:
 	}
 }
 
@@ -139,21 +142,20 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 	// }
 }
 
-func resolveHashtagType(message *tgbotapi.Message, entity *tgbotapi.MessageEntity) {
-	hashtag := []rune(strings.ToLower(message.Text))[entity.Offset : entity.Length+entity.Offset]
-	if _, exist := info[string(hashtag)]; exist {
-		for _, channelId := range info[string(hashtag)] {
-			msg := tgbotapi.NewMessage(channelId, message.Text)
-			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonURL("Ir a mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
-				),
-			)
+func resolveHashtagType(message *tgbotapi.Message) {
+	hashtagList := getHashtagList(message.Text, message.Entities)
+	channelIdList := getChannelList(hashtagList)
+	for _, chId := range channelIdList {
+		msg := tgbotapi.NewMessage(chId, message.Text)
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+			),
+		)
 
-			_, err := bot.Send(msg)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
+		_, err := bot.Send(msg)
+		if err != nil {
+			fmt.Println(err.Error())
 		}
 	}
 }
@@ -172,8 +174,8 @@ func getAllData() string {
 
 	var result2 string
 	for key, value := range result {
-		chat, err := bot.GetChat(tgbotapi.ChatConfig{
-			ChatID: key,
+		chat, err := bot.GetChat(tgbotapi.ChatInfoConfig{
+			ChatConfig: tgbotapi.ChatConfig{ChatID: key},
 		})
 
 		if err != nil {
@@ -189,7 +191,7 @@ func getAllData() string {
 func getUpdateCh() (tgbotapi.UpdatesChannel, error) {
 	webhookPath := os.Getenv(WEBHOOK_PATH)
 	if webhookPath != "" {
-		_, err := bot.SetWebhook(tgbotapi.NewWebhook(webhookPath))
+		_, err := bot.Request(tgbotapi.NewWebhook(webhookPath))
 		if err != nil {
 			panic(err)
 		}
@@ -199,6 +201,43 @@ func getUpdateCh() (tgbotapi.UpdatesChannel, error) {
 		return bot.GetUpdatesChan(tgbotapi.UpdateConfig{
 			Offset:  0,
 			Timeout: 0,
-		})
+		}), nil
 	}
+}
+
+func containsHashtag(entities []tgbotapi.MessageEntity) bool {
+	for _, entity := range entities {
+		if entity.Type == HashtagType {
+			return true
+		}
+	}
+
+	return false
+}
+
+func getHashtagList(text string, entities []tgbotapi.MessageEntity) []string {
+	hashtagList := make([]string, 0)
+	for _, entity := range entities {
+		hashtagList = append(hashtagList, string([]rune(strings.ToLower(text))[entity.Offset:entity.Length+entity.Offset]))
+	}
+
+	return hashtagList
+}
+
+func getChannelList(hashtagList []string) []int64 {
+	channelList := make([]int64, 0)
+	channelFilter := make(map[int64]struct{})
+	for _, hashtag := range hashtagList {
+		// Get list of channels subscribed to a hashtag
+		if subsChannels, ok := info[hashtag]; ok {
+			for _, ch := range subsChannels {
+				if _, ok := channelFilter[ch]; !ok {
+					channelList = append(channelList, ch)
+					channelFilter[ch] = struct{}{}
+				}
+			}
+		}
+	}
+
+	return channelList
 }

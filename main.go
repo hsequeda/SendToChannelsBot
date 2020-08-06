@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
@@ -26,6 +27,18 @@ var bot *tgbotapi.BotAPI
 var db *PostgresDatabase
 
 var info map[string][]int64
+var info2 map[string][]int64
+
+func getCapasity() int {
+	size := 0
+	for hashtag, chIdList := range info {
+		size += int(unsafe.Sizeof(hashtag))
+		for _, chId := range chIdList {
+			size += int(unsafe.Sizeof(chId))
+		}
+	}
+	return size
+}
 
 func init() {
 	var err error
@@ -38,7 +51,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
+	info2 = info
+	fmt.Printf("%#v bits\n", getCapasity())
 	botToken := os.Getenv(BOT_TOKEN)
 	bot, err = tgbotapi.NewBotAPI(botToken)
 	if err != nil {
@@ -74,29 +88,15 @@ func resolveUpdate(update *tgbotapi.Update) {
 }
 
 func resolveMessage(message *tgbotapi.Message) {
-	switch {
-	case regexp.MustCompile(`(?m)^\/list( \w+|$)`).MatchString(message.Text):
-		adminId := os.Getenv(ADMIN_ID)
-		if strconv.FormatInt(message.Chat.ID, 10) == adminId {
-			bot.Send(tgbotapi.NewMessage(message.Chat.ID, getAllData()))
+	if message.IsCommand() {
+		if err := handleCommand(message); err != nil {
+			fmt.Println(err.Error())
 		}
+		return
+	}
 
-	case message.Entities != nil:
-		if containsHashtag(message.Entities) {
-			resolveHashtagType(message)
-		}
-	case message.CaptionEntities != nil:
-		// for _, entity := range message.CaptionEntities {
-		// 	switch entity.Type {
-		// 	case HashtagType:
-		// 		resolveHashtagType(message, &entity)
-		// 	case CommandType:
-
-		// 	default:
-
-		// 	}
-		// }
-	default:
+	if message.Entities != nil || message.CaptionEntities != nil {
+		resolveHashtagType(message)
 	}
 }
 
@@ -143,25 +143,13 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 }
 
 func resolveHashtagType(message *tgbotapi.Message) {
-	hashtagList := getHashtagList(message.Text, message.Entities)
-	channelIdList := getChannelList(hashtagList)
-	for _, chId := range channelIdList {
-		msg := tgbotapi.NewMessage(chId, message.Text)
-		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
-			),
-		)
-
-		_, err := bot.Send(msg)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
+	if message.Text != "" {
+		getMessageFromText(message)
 	}
-}
 
-func resolveCommandType(message *tgbotapi.Message, entity *tgbotapi.MessageEntity) {
-
+	if message.Caption != "" {
+		getMessageFromCaption(message)
+	}
 }
 
 func getAllData() string {
@@ -240,4 +228,93 @@ func getChannelList(hashtagList []string) []int64 {
 	}
 
 	return channelList
+}
+
+func handleCommand(message *tgbotapi.Message) error {
+	switch {
+	case regexp.MustCompile(`(?m)^\/list( \w+|$)`).MatchString(message.Text):
+		adminId := os.Getenv(ADMIN_ID)
+		if strconv.FormatInt(message.Chat.ID, 10) == adminId {
+			_, err := bot.Send(tgbotapi.NewMessage(message.Chat.ID, getAllData()))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func getMessageFromText(message *tgbotapi.Message) {
+	hashtagList := getHashtagList(message.Text, message.Entities)
+	channelIdList := getChannelList(hashtagList)
+	for _, chId := range channelIdList {
+		toSend := tgbotapi.NewMessage(chId, message.Text)
+		toSend.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+			),
+		)
+
+		_, err := bot.Send(toSend)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+}
+
+func getMessageFromCaption(message *tgbotapi.Message) {
+	hashtagList := getHashtagList(message.Caption, message.CaptionEntities)
+	channelIdList := getChannelList(hashtagList)
+	for _, chId := range channelIdList {
+		var toSend tgbotapi.Chattable
+		if message.Photo != nil {
+			photoConfig := tgbotapi.NewPhotoShare(chId, message.Photo[0].FileID)
+			photoConfig.Caption = message.Caption
+			photoConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+				),
+			)
+			toSend = photoConfig
+		}
+
+		if message.Audio != nil {
+			audioConfig := tgbotapi.NewAudioShare(chId, message.Audio.FileID)
+			audioConfig.Caption = message.Caption
+			audioConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+				),
+			)
+			toSend = audioConfig
+		}
+
+		if message.Video != nil {
+			videoConfig := tgbotapi.NewVideoShare(chId, message.Video.FileID)
+			videoConfig.Caption = message.Caption
+			videoConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+				),
+			)
+			toSend = videoConfig
+		}
+
+		if message.Document != nil {
+			documentConfig := tgbotapi.NewDocumentShare(chId, message.Document.FileID)
+			documentConfig.Caption = message.Caption
+			documentConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+				),
+			)
+			toSend = documentConfig
+		}
+
+		_, err := bot.Send(toSend)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
 }

@@ -38,7 +38,7 @@ const (
 	UPDATE_MESSAGES = "update_messages"
 	APPEND          = "append"
 
-	tableName = "documentb"
+	TABLE_NAME = "TABLE_NAME"
 )
 
 type PostgresDatabase struct {
@@ -47,6 +47,7 @@ type PostgresDatabase struct {
 }
 
 func InitDb() (*PostgresDatabase, error) {
+	tableName := os.Getenv(TABLE_NAME)
 	var db, err = sql.Open(driver, fmt.Sprintf(
 		"host=%s user=%s dbname=%s password=%s sslmode=%s",
 		dbhost, dbuser, dbName, dbpassword, sslmode))

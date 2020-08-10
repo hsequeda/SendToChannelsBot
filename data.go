@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -61,9 +62,9 @@ func InitDb() (*PostgresDatabase, error) {
 
 	var stmts = map[string]*stmtConfig{
 		LIST_HASHTAG:    {query: fmt.Sprintf(`select info::jsonb->'hashtags' from "%s";`, tableName)},
-		UPDATE_HASHTAG:  {query: fmt.Sprintf(`update "%s" set info=jsonb_set(info, '{hashtags, $1}', $2) returning info::jsonb->'hashtags';`, tableName)},
+		UPDATE_HASHTAG:  {query: fmt.Sprintf(`update "%s" set info=jsonb_set(info, $1, $2) returning info::jsonb->'hashtags';`, tableName)},
 		LIST_MESSAGES:   {query: fmt.Sprintf(`select info::jsonb->'messages' from "%s";`, tableName)},
-		UPDATE_MESSAGES: {query: fmt.Sprintf(`update "%s" set info=jsonb_set(info, '{messages, $1}', $2) returning info::jsonb->'messages';`, tableName)},
+		UPDATE_MESSAGES: {query: fmt.Sprintf(`update "%s" set info=jsonb_set(info, $1, $2) returning info::jsonb->'messages';`, tableName)},
 	}
 	for key, value := range stmts {
 		stmts[key].stmt, _ = db.Prepare(value.query)
@@ -83,7 +84,7 @@ func (d *PostgresDatabase) UpdateHashtags(hashtag string, channelIdList []int64)
 	}
 
 	var RawHashtags string
-	err = insertUser.QueryRow(hashtag, string(channelIdListJson)).Scan(&RawHashtags)
+	err = insertUser.QueryRow(pq.Array([]string{"hashtags", hashtag}), string(channelIdListJson)).Scan(&RawHashtags)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +121,7 @@ func (d *PostgresDatabase) UpdateMessages(messageId string, channelRefList []Cha
 	}
 
 	var RawMessages string
-	err = insertUser.QueryRow(messageId, string(channelRefListJson)).Scan(&RawMessages)
+	err = insertUser.QueryRow(pq.Array([]string{"messages", messageId}), string(channelRefListJson)).Scan(&RawMessages)
 	if err != nil {
 		return nil, err
 	}

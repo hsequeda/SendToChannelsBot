@@ -419,7 +419,7 @@ func getUserMention(entities []tgbotapi.MessageEntity, text []rune) (*tgbotapi.U
 // func editMessage(message *tgbotapi.Message) ([]ChannelMessage, error) {
 // 	hashtagList := getHashtagList(message.Text, message.Entities)
 // 	channelIdList := getChannelList(hashtagList)
-// 	channelList := messages[strconv.Itoa(message.MessageID)]
+// 	// channelList := messages[strconv.Itoa(message.MessageID)]
 
 // 	var user *tgbotapi.User
 // 	user = message.From

@@ -63,7 +63,7 @@ func InitDb() (*PostgresDatabase, error) {
 		LIST_HASHTAG:    {query: fmt.Sprintf(`select info::jsonb->'hashtags' from "%s";`, tableName)},
 		UPDATE_HASHTAG:  {query: fmt.Sprintf(`update "%s" set info=jsonb_set(info, '{hashtags, $1}', $2) returning info::jsonb->'hashtags';`, tableName)},
 		LIST_MESSAGES:   {query: fmt.Sprintf(`select info::jsonb->'messages' from "%s";`, tableName)},
-		UPDATE_MESSAGES: {query: fmt.Sprintf(`update "%s" set info=jsonb_set(info, '{messages, $1}', $2) returning info::jsonb->'messages';`, tableName)},
+		UPDATE_MESSAGES: {query: fmt.Sprintf(`update "%s" set info=jsonb_set(, $1, $2) returning info::jsonb->'messages';`, tableName)},
 	}
 	for key, value := range stmts {
 		stmts[key].stmt, _ = db.Prepare(value.query)
@@ -113,24 +113,28 @@ func (d *PostgresDatabase) ListHashtags() (map[string][]int64, error) {
 }
 
 func (d *PostgresDatabase) UpdateMessages(messageId string, channelRefList []ChannelMessage) (map[string][]ChannelMessage, error) {
-	var insertUser = d.Stmts[UPDATE_MESSAGES].stmt
-	var channelRefListJson, err = json.Marshal(channelRefList)
-	if err != nil {
-		return nil, err
-	}
+	// var insertUser = d.Stmts[UPDATE_MESSAGES].stmt
+	// var channelRefListJson, err = json.Marshal(channelRefList)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	var RawMessages string
-	err = insertUser.QueryRow(messageId, string(channelRefListJson)).Scan(&RawMessages)
-	if err != nil {
-		return nil, err
-	}
+	// var RawMessages string
+	// fmt.Println(string(channelRefListJson))
+	// fmt.Println(messageId)
 
-	var Messages = make(map[string][]ChannelMessage)
-	if err := json.Unmarshal([]byte(RawMessages), &Messages); err != nil {
-		return nil, err
-	}
+	// err = insertUser.QueryRow(pq.Array([]string{"messages",}), string(channelRefListJson)).Scan(&RawMessages)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	return Messages, nil
+	// var Messages = make(map[string][]ChannelMessage)
+	// if err := json.Unmarshal([]byte(RawMessages), &Messages); err != nil {
+	// 	return nil, err
+	// }
+
+	// return Messages, nil
+	return map[string][]ChannelMessage{}, nil
 }
 
 func (d *PostgresDatabase) ListMessages() (map[string][]ChannelMessage, error) {

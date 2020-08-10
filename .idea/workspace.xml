@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="d7c71fe1-a630-4afb-ae99-9db10c9c0240" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/data.go" beforeDir="false" afterPath="$PROJECT_DIR$/data.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="GOROOT" path="/usr/local/go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GoLibraries">
+    <option name="indexEntireGoPath" value="false" />
+  </component>
+  <component name="ProjectId" id="1fjRtV8ZDN529oW0M49sD8oPz8Q" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DatabaseDriversLRU" value="postgresql" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="go.sdk.automatically.set" value="true" />
+    <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
+    <property name="settings.editor.selected.configurable" value="preferences.updates" />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="VgoProject">
+    <integration-enabled>true</integration-enabled>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="278" y="59" width="800" height="684" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1596731910753">
+      <screen x="0" y="27" width="1366" height="741" />
+    </state>
+    <state x="278" y="59" width="800" height="684" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1366.741@0.27.1366.741" timestamp="1596731910753" />
+    <state width="935" height="180" key="GridCell.Tab.0.bottom" timestamp="1596749210443">
+      <screen x="0" y="27" width="1366" height="741" />
+    </state>
+    <state width="935" height="180" key="GridCell.Tab.0.bottom/0.27.1366.741@0.27.1366.741" timestamp="1596749210443" />
+    <state width="935" height="180" key="GridCell.Tab.0.center" timestamp="1596749210442">
+      <screen x="0" y="27" width="1366" height="741" />
+    </state>
+    <state width="935" height="180" key="GridCell.Tab.0.center/0.27.1366.741@0.27.1366.741" timestamp="1596749210442" />
+    <state width="935" height="180" key="GridCell.Tab.0.left" timestamp="1596749210442">
+      <screen x="0" y="27" width="1366" height="741" />
+    </state>
+    <state width="935" height="180" key="GridCell.Tab.0.left/0.27.1366.741@0.27.1366.741" timestamp="1596749210442" />
+    <state width="935" height="180" key="GridCell.Tab.0.right" timestamp="1596749210442">
+      <screen x="0" y="27" width="1366" height="741" />
+    </state>
+    <state width="935" height="180" key="GridCell.Tab.0.right/0.27.1366.741@0.27.1366.741" timestamp="1596749210442" />
+    <state x="519" y="27" width="567" height="741" key="com.intellij.database.view.ui.AbstractDbRefactoringDialog" timestamp="1596748114608">
+      <screen x="0" y="27" width="1366" height="741" />
+    </state>
+    <state x="519" y="27" width="567" height="741" key="com.intellij.database.view.ui.AbstractDbRefactoringDialog/0.27.1366.741@0.27.1366.741" timestamp="1596748114608" />
+    <state x="346" y="89" width="672" height="678" key="search.everywhere.popup" timestamp="1596747971689">
+      <screen x="0" y="27" width="1366" height="741" />
+    </state>
+    <state x="346" y="89" width="672" height="678" key="search.everywhere.popup/0.27.1366.741@0.27.1366.741" timestamp="1596747971689" />
+  </component>
+</project>

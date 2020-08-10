@@ -28,19 +28,44 @@ var bot *tgbotapi.BotAPI
 
 var db *PostgresDatabase
 
-var info map[string][]int64
-var info2 map[string][]int64
+var hashtags map[string][]int64
+var messages map[string][]ChannelMessage
 
 func getCapasity() int {
 	size := 0
-	for hashtag, chIdList := range info {
+	for hashtag, chIdList := range hashtags {
 		size += int(unsafe.Sizeof(hashtag))
 		for _, chId := range chIdList {
 			size += int(unsafe.Sizeof(chId))
 		}
 	}
+
+	for messageId, channelMessageList := range messages {
+		size += int(unsafe.Sizeof(messageId))
+		for _, chMsgId := range channelMessageList {
+			size += int(unsafe.Sizeof(chMsgId))
+		}
+	}
 	return size
 }
+
+// func sendMes(id int64) {
+// 	msg := tgbotapi.NewMessage(id, "<a href=\"http://t.me/jessypa\">TEXT</a>")
+// 	msg.ParseMode = "html"
+// 	m, err := bot.Send(msg)
+// 	if err != nil {
+// 		fmt.Sprintln(err)
+// 		return
+// 	}
+
+// 	b, err := json.Marshal(m)
+// 	if err != nil {
+// 		fmt.Sprintln(err)
+// 		return
+// 	}
+
+// 	fmt.Println(string(b))
+// }
 
 func init() {
 	var err error
@@ -49,12 +74,18 @@ func init() {
 		panic(err)
 	}
 
-	info, err = db.List()
+	hashtags, err = db.ListHashtags()
 	if err != nil {
 		panic(err)
 	}
-	info2 = info
+
+	messages, err = db.ListMessages()
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Printf("%#v bits\n", getCapasity())
+
 	botToken := os.Getenv(BOT_TOKEN)
 	bot, err = tgbotapi.NewBotAPI(botToken)
 	if err != nil {
@@ -82,8 +113,10 @@ func resolveUpdate(update *tgbotapi.Update) {
 
 	switch {
 	case update.Message != nil:
+		// sendMes(update.Message.Chat.ID)
 		resolveMessage(update.Message)
-
+	case update.EditedMessage != nil:
+		// resolveEditMessage(update.EditedMessage)
 	case update.ChannelPost != nil:
 		resolveChannelPost(update.ChannelPost)
 	}
@@ -98,7 +131,17 @@ func resolveMessage(message *tgbotapi.Message) {
 	}
 
 	if message.Entities != nil || message.CaptionEntities != nil {
-		resolveHashtagType(message)
+		channelMessageList, err := resolveHashtagType(message)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		if channelMessageList != nil {
+			messages, err = db.UpdateMessages(strconv.FormatInt(int64(message.MessageID), 10), channelMessageList)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		}
 	}
 }
 
@@ -111,15 +154,15 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 	// 				hashtag = channelPost.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
 	// 			}
 
-	// 			if _, exist := info[hashtag]; !exist {
-	// 				info[hashtag] = append(info[hashtag], channelPost.Chat.ID)
+	// 			if _, exist := hashtags[hashtag]; !exist {
+	// 				hashtags[hashtag] = append(hashtags[hashtag], channelPost.Chat.ID)
 	// 				_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", hashtag)))
 	// 				if err != nil {
 	// 					fmt.Println(err.Error())
 	// 				}
 	// 			} else {
 	// 				exist := false
-	// 				for _, channelId := range info[hashtag] {
+	// 				for _, channelId := range hashtags[hashtag] {
 	// 					if channelPost.Chat.ID == channelId {
 	// 						exist = true
 	// 						break
@@ -127,8 +170,8 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 	// 				}
 
 	// 				if !exist {
-	// 					info[hashtag] = append(
-	// 						info[hashtag], channelPost.Chat.ID)
+	// 					hashtags[hashtag] = append(
+	// 						hashtags[hashtag], channelPost.Chat.ID)
 	// 					_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", hashtag)))
 	// 					if err != nil {
 	// 						fmt.Println(err.Error())
@@ -137,26 +180,28 @@ func resolveChannelPost(channelPost *tgbotapi.Message) {
 	// 			}
 	// 		}
 
-	// 		if err := db.Update(info); err != nil {
+	// 		if err := db.Update(hashtags); err != nil {
 	// 			fmt.Println(err)
 	// 		}
 	// 	}
 	// }
 }
 
-func resolveHashtagType(message *tgbotapi.Message) {
+func resolveHashtagType(message *tgbotapi.Message) ([]ChannelMessage, error) {
 	if message.Text != "" {
-		getMessageFromText(message)
+		return sendMessageFromText(message)
 	}
 
 	if message.Caption != "" {
-		getMessageFromCaption(message)
+		return sendMessageFromCaption(message)
 	}
+
+	return nil, nil
 }
 
 func getAllData() string {
 	result := map[int64][]string{}
-	for key, value := range info {
+	for key, value := range hashtags {
 		for _, value2 := range value {
 			result[value2] = append(result[value2], key)
 		}
@@ -219,7 +264,7 @@ func getChannelList(hashtagList []string) []int64 {
 	channelFilter := make(map[int64]struct{})
 	for _, hashtag := range hashtagList {
 		// Get list of channels subscribed to a hashtag
-		if subsChannels, ok := info[hashtag]; ok {
+		if subsChannels, ok := hashtags[hashtag]; ok {
 			for _, ch := range subsChannels {
 				if _, ok := channelFilter[ch]; !ok {
 					channelList = append(channelList, ch)
@@ -246,7 +291,7 @@ func handleCommand(message *tgbotapi.Message) error {
 	return nil
 }
 
-func getMessageFromText(message *tgbotapi.Message) {
+func sendMessageFromText(message *tgbotapi.Message) ([]ChannelMessage, error) {
 	hashtagList := getHashtagList(message.Text, message.Entities)
 	channelIdList := getChannelList(hashtagList)
 	var user *tgbotapi.User
@@ -254,6 +299,8 @@ func getMessageFromText(message *tgbotapi.Message) {
 	if userMention, ok := getUserMention(message.Entities, []rune(message.Text)); ok {
 		user = userMention
 	}
+
+	var channelMessageList = make([]ChannelMessage, 0)
 	for _, chId := range channelIdList {
 		toSend := tgbotapi.NewMessage(chId, fmt.Sprintf("%s\n%s", message.Text, getRefLink(user)))
 		toSend.ParseMode = "html"
@@ -265,14 +312,15 @@ func getMessageFromText(message *tgbotapi.Message) {
 
 		msg, err := bot.Send(toSend)
 		if err != nil {
-			fmt.Println(err.Error())
+			return nil, err
 		}
-		b, _ := json.Marshal(msg)
-		fmt.Println(string(b))
+
+		channelMessageList = append(channelMessageList, ChannelMessage{ChannelId: chId, MessageId: int64(msg.MessageID)})
 	}
+	return channelMessageList, nil
 }
 
-func getMessageFromCaption(message *tgbotapi.Message) {
+func sendMessageFromCaption(message *tgbotapi.Message) ([]ChannelMessage, error) {
 	hashtagList := getHashtagList(message.Caption, message.CaptionEntities)
 	channelIdList := getChannelList(hashtagList)
 	var user *tgbotapi.User
@@ -281,11 +329,13 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 		user = userMention
 	}
 	refLink := getRefLink(user)
+	var channelMessageList = make([]ChannelMessage, 0)
 	for _, chId := range channelIdList {
 		var toSend tgbotapi.Chattable
 		if message.Photo != nil {
 			photoConfig := tgbotapi.NewPhotoShare(chId, message.Photo[0].FileID)
 			photoConfig.Caption = fmt.Sprintf("%s\n%s", message.Caption, refLink)
+			photoConfig.ParseMode = "html"
 			photoConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
@@ -297,6 +347,7 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 		if message.Audio != nil {
 			audioConfig := tgbotapi.NewAudioShare(chId, message.Audio.FileID)
 			audioConfig.Caption = fmt.Sprintf("%s\n%s", message.Caption, refLink)
+			audioConfig.ParseMode = "html"
 			audioConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
@@ -308,6 +359,7 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 		if message.Video != nil {
 			videoConfig := tgbotapi.NewVideoShare(chId, message.Video.FileID)
 			videoConfig.Caption = fmt.Sprintf("%s\n%s", message.Caption, refLink)
+			videoConfig.ParseMode = "html"
 			videoConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
@@ -319,6 +371,7 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 		if message.Document != nil {
 			documentConfig := tgbotapi.NewDocumentShare(chId, message.Document.FileID)
 			documentConfig.Caption = fmt.Sprintf("%s\n%s", message.Caption, refLink)
+			documentConfig.ParseMode = "html"
 			documentConfig.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 				tgbotapi.NewInlineKeyboardRow(
 					tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
@@ -327,12 +380,14 @@ func getMessageFromCaption(message *tgbotapi.Message) {
 			toSend = documentConfig
 		}
 
-		_, err := bot.Send(toSend)
+		msg, err := bot.Send(toSend)
 		if err != nil {
-			fmt.Println(err.Error())
+			return nil, err
 		}
-	}
 
+		channelMessageList = append(channelMessageList, ChannelMessage{ChannelId: chId, MessageId: int64(msg.MessageID)})
+	}
+	return channelMessageList, nil
 }
 
 func getRefLink(user *tgbotapi.User) string {
@@ -360,3 +415,34 @@ func getUserMention(entities []tgbotapi.MessageEntity, text []rune) (*tgbotapi.U
 	}
 	return nil, false
 }
+
+// func editMessage(message *tgbotapi.Message) ([]ChannelMessage, error) {
+// 	hashtagList := getHashtagList(message.Text, message.Entities)
+// 	channelIdList := getChannelList(hashtagList)
+// 	channelList := messages[strconv.Itoa(message.MessageID)]
+
+// 	var user *tgbotapi.User
+// 	user = message.From
+// 	if userMention, ok := getUserMention(message.Entities, []rune(message.Text)); ok {
+// 		user = userMention
+// 	}
+// 	var channelMessageList = make([]ChannelMessage, 0)
+// 	for _, chId := range channelIdList {
+// 		toSend := tgbotapi.NewMessage(chId, fmt.Sprintf("%s\n%s", message.Text, getRefLink(user)))
+// 		toSend.ParseMode = "html"
+// 		toSend.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+// 			tgbotapi.NewInlineKeyboardRow(
+// 				tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+// 			),
+// 		)
+
+// 		msg, err := bot.Send(toSend)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		channelMessageList = append(channelMessageList, ChannelMessage{ChannelId: chId, MessageId: int64(msg.MessageID)})
+// 	}
+// 	return channelMessageList, nil
+
+// }

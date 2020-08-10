@@ -9,6 +9,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type ChannelMessage struct {
+	ChannelId int64 `json:"channel_id"`
+	MessageId int64 `json:"message_id"`
+}
+
 // Database properties
 var (
 	driver     = os.Getenv("DRIVER")
@@ -20,16 +25,20 @@ var (
 )
 
 type stmtConfig struct {
-	stmt *sql.Stmt
-	q    string
+	stmt  *sql.Stmt
+	query string
 }
 
 // Statements
 const (
-	INSERT = "insert"
-	UPDATE = "update"
-	LIST   = "list"
-	APPEND = "append"
+	INSERT          = "insert"
+	UPDATE_HASHTAG  = "update"
+	LIST_HASHTAG    = "list"
+	LIST_MESSAGES   = "list_messages"
+	UPDATE_MESSAGES = "update_messages"
+	APPEND          = "append"
+
+	TABLE_NAME = "TABLE_NAME"
 )
 
 type PostgresDatabase struct {
@@ -38,7 +47,8 @@ type PostgresDatabase struct {
 }
 
 func InitDb() (*PostgresDatabase, error) {
-	db, err := sql.Open(driver, fmt.Sprintf(
+	tableName := os.Getenv(TABLE_NAME)
+	var db, err = sql.Open(driver, fmt.Sprintf(
 		"host=%s user=%s dbname=%s password=%s sslmode=%s",
 		dbhost, dbuser, dbName, dbpassword, sslmode))
 	if err != nil {
@@ -49,12 +59,14 @@ func InitDb() (*PostgresDatabase, error) {
 		return nil, err
 	}
 
-	stmts := map[string]*stmtConfig{
-		LIST:   {q: "select info from \"document\";"},
-		UPDATE: {q: "update \"document\" set info=$1;"},
+	var stmts = map[string]*stmtConfig{
+		LIST_HASHTAG:    {query: fmt.Sprintf(`select info::jsonb->'hashtags' from "%s";`, tableName)},
+		UPDATE_HASHTAG:  {query: fmt.Sprintf(`update "%s" set info=jsonb_set(info, '{hashtags, $1}', $2) returning info::jsonb->'hashtags';`, tableName)},
+		LIST_MESSAGES:   {query: fmt.Sprintf(`select info::jsonb->'messages' from "%s";`, tableName)},
+		UPDATE_MESSAGES: {query: fmt.Sprintf(`update "%s" set info=jsonb_set(info, '{messages, $1}', $2) returning info::jsonb->'messages';`, tableName)},
 	}
-	for k, v := range stmts {
-		stmts[k].stmt, _ = db.Prepare(v.q)
+	for key, value := range stmts {
+		stmts[key].stmt, _ = db.Prepare(value.query)
 	}
 
 	return &PostgresDatabase{
@@ -63,43 +75,82 @@ func InitDb() (*PostgresDatabase, error) {
 	}, nil
 }
 
-func (d *PostgresDatabase) Update(data map[string][]int64) error {
-	insertUser := d.Stmts[UPDATE].stmt
-	rawJson, err := json.Marshal(data)
+func (d *PostgresDatabase) UpdateHashtags(hashtag string, channelIdList []int64) (map[string][]int64, error) {
+	var insertUser = d.Stmts[UPDATE_HASHTAG].stmt
+	var channelIdListJson, err = json.Marshal(channelIdList)
 	if err != nil {
-		return err
-	}
-
-	_, err = insertUser.Exec(string(rawJson))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (d *PostgresDatabase) List() (map[string][]int64, error) {
-	listUser := d.Stmts[LIST].stmt
-
-	row := listUser.QueryRow()
-
-	var info string
-	if err := row.Scan(&info); err != nil {
 		return nil, err
 	}
 
-	var result = make(map[string][]int64)
-	if err := json.Unmarshal([]byte(info), &result); err != nil {
+	var RawHashtags string
+	err = insertUser.QueryRow(hashtag, string(channelIdListJson)).Scan(&RawHashtags)
+	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	var Hashtags = make(map[string][]int64)
+	if err := json.Unmarshal([]byte(RawHashtags), &Hashtags); err != nil {
+		return nil, err
+	}
+
+	return Hashtags, nil
 }
 
+func (d *PostgresDatabase) ListHashtags() (map[string][]int64, error) {
+	var listUser = d.Stmts[LIST_HASHTAG].stmt
+
+	var RawHashtags string
+	if err := listUser.QueryRow().Scan(&RawHashtags); err != nil {
+		return nil, err
+	}
+
+	var Hashtags = make(map[string][]int64)
+	if err := json.Unmarshal([]byte(RawHashtags), &Hashtags); err != nil {
+		return nil, err
+	}
+
+	return Hashtags, nil
+}
+
+func (d *PostgresDatabase) UpdateMessages(messageId string, channelRefList []ChannelMessage) (map[string][]ChannelMessage, error) {
+	var insertUser = d.Stmts[UPDATE_MESSAGES].stmt
+	var channelRefListJson, err = json.Marshal(channelRefList)
+	if err != nil {
+		return nil, err
+	}
+
+	var RawMessages string
+	err = insertUser.QueryRow(messageId, string(channelRefListJson)).Scan(&RawMessages)
+	if err != nil {
+		return nil, err
+	}
+
+	var Messages = make(map[string][]ChannelMessage)
+	if err := json.Unmarshal([]byte(RawMessages), &Messages); err != nil {
+		return nil, err
+	}
+
+	return Messages, nil
+}
+
+func (d *PostgresDatabase) ListMessages() (map[string][]ChannelMessage, error) {
+	var listUser = d.Stmts[LIST_MESSAGES].stmt
+
+	var RawMessages string
+	if err := listUser.QueryRow().Scan(&RawMessages); err != nil {
+		return nil, err
+	}
+
+	var Messages = make(map[string][]ChannelMessage)
+	if err := json.Unmarshal([]byte(RawMessages), &Messages); err != nil {
+		return nil, err
+	}
+
+	return Messages, nil
+}
 func (d *PostgresDatabase) Close() error {
 	for s := range d.Stmts {
-		err := d.Stmts[s].stmt.Close()
-		if err != nil {
+		if err := d.Stmts[s].stmt.Close(); err != nil {
 			return err
 		}
 	}

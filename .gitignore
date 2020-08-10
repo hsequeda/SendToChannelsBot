@@ -13,3 +13,10 @@
 #
 # Test files
 *.json
+
+# JetBrains
+.idea/*
+.idea/workspace.xml
+
+#Config
+.setUpEnvVars.sh

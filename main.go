@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf16"
 	"unsafe"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -251,11 +252,11 @@ func containsHashtag(entities []tgbotapi.MessageEntity) bool {
 }
 
 func getHashtagList(text string, entities []tgbotapi.MessageEntity) []string {
+	var textUtf16 = utf16.Encode([]rune(text))
 	hashtagList := make([]string, 0)
 	for _, entity := range entities {
-		fmt.Println(text)
-		fmt.Printf("offset: %d, length: %d;", entity.Offset, entity.Length)
-		hashtagList = append(hashtagList, string([]rune(strings.ToLower(text))[entity.Offset:entity.Length+entity.Offset]))
+		hashtag := string(utf16.Decode(textUtf16[entity.Offset : entity.Offset+entity.Length]))
+		hashtagList = append(hashtagList, hashtag)
 	}
 
 	return hashtagList
@@ -405,13 +406,14 @@ func getRefLink(user *tgbotapi.User) string {
 }
 
 func getUserMention(entities []tgbotapi.MessageEntity, text []rune) (*tgbotapi.User, bool) {
+	var textUtf16 = utf16.Encode(text)
 	for _, entity := range entities {
 		if entity.Type == TextMentionType {
 			return entity.User, true
 		}
 		if entity.Type == MentionType {
 			return &tgbotapi.User{
-				UserName: string(text[entity.Offset+1 : entity.Offset+entity.Length]),
+				UserName: string(utf16.Decode(textUtf16[entity.Offset+1 : entity.Offset+entity.Length])),
 			}, true
 		}
 	}

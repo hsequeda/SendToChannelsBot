@@ -253,6 +253,8 @@ func containsHashtag(entities []tgbotapi.MessageEntity) bool {
 func getHashtagList(text string, entities []tgbotapi.MessageEntity) []string {
 	hashtagList := make([]string, 0)
 	for _, entity := range entities {
+		fmt.Println(text)
+		fmt.Printf("offset: %d, length: %d;", entity.Offset, entity.Length)
 		hashtagList = append(hashtagList, string([]rune(strings.ToLower(text))[entity.Offset:entity.Length+entity.Offset]))
 	}
 

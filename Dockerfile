@@ -6,6 +6,6 @@ WORKDIR /app_dir
 RUN CGO_ENABLED=0 go build -o /app .
 
 FROM scratch
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app /app
 CMD ["./app"]

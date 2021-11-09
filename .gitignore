@@ -20,3 +20,4 @@
 
 #Config
 .setUpEnvVars.sh
+.env

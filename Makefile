@@ -20,5 +20,7 @@ migration_status:
 
 .PHONY: generate_db_model
 generate_db_model:
-	rm -rf internal/common/sql/psql_models/*
-	sqlboiler -o internal/common/sql/psql_models -p psql_models psql --add-global-variants --no-hooks --no-auto-timestamps
+	sqlboiler -d --wipe -o adapter/model/ -p model psql --add-global-variants --no-hooks
+
+integration_test:
+	go test --race -v -count=1 -p=8 -parallel=8 ./...

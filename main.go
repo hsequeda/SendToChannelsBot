@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 	"unsafe"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/stdevHsequeda/SendToChannelsBot/adapter"
+	"github.com/stdevHsequeda/SendToChannelsBot/app/command"
 )
 
 const (
@@ -50,23 +53,7 @@ func getCapasity() int {
 	return size
 }
 
-// func sendMes(id int64) {
-// 	msg := tgbotapi.NewMessage(id, "<a href=\"http://t.me/jessypa\">TEXT</a>")
-// 	msg.ParseMode = "html"
-// 	m, err := bot.Send(msg)
-// 	if err != nil {
-// 		fmt.Sprintln(err)
-// 		return
-// 	}
-
-// 	b, err := json.Marshal(m)
-// 	if err != nil {
-// 		fmt.Sprintln(err)
-// 		return
-// 	}
-
-// 	fmt.Println(string(b))
-// }
+var replyToChannelsHandler command.ReplyToChannelsHandler
 
 func init() {
 	var err error
@@ -99,12 +86,26 @@ func init() {
 
 func main() {
 	fmt.Println("Started")
+
+	dbConn, err := adapter.NewPostgresConnPool()
+	PanicIfErr(err)
+
+	channelRepo := adapter.NewPostgresChannelRepository(dbConn)
+	messageSender := adapter.NewMessageSender(bot)
+	replyToChannelsHandler = command.NewReplyToChannelsHandler(channelRepo, messageSender)
+
 	updates, err := getUpdateCh()
 	if err != nil {
 		panic(err)
 	}
 	for update := range updates {
 		resolveUpdate(&update)
+	}
+}
+
+func PanicIfErr(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -144,48 +145,6 @@ func resolveMessage(message *tgbotapi.Message) {
 			}
 		}
 	}
-}
-
-func resolveChannelPost(channelPost *tgbotapi.Message) {
-	// if channelPost.Entities != nil {
-	// 	for _, entity := range *channelPost.Entities {
-	// 		if entity.Type == HashtagType {
-	// 			hashtag := channelPost.Text[entity.Offset : entity.Offset+entity.Length]
-	// 			if hashtag[0] == ' ' {
-	// 				hashtag = channelPost.Text[entity.Offset+1 : entity.Offset+entity.Length+1]
-	// 			}
-
-	// 			if _, exist := hashtags[hashtag]; !exist {
-	// 				hashtags[hashtag] = append(hashtags[hashtag], channelPost.Chat.ID)
-	// 				_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", hashtag)))
-	// 				if err != nil {
-	// 					fmt.Println(err.Error())
-	// 				}
-	// 			} else {
-	// 				exist := false
-	// 				for _, channelId := range hashtags[hashtag] {
-	// 					if channelPost.Chat.ID == channelId {
-	// 						exist = true
-	// 						break
-	// 					}
-	// 				}
-
-	// 				if !exist {
-	// 					hashtags[hashtag] = append(
-	// 						hashtags[hashtag], channelPost.Chat.ID)
-	// 					_, err := bot.Send(tgbotapi.NewMessage(channelPost.Chat.ID, fmt.Sprintf("Added hashtag: %s", hashtag)))
-	// 					if err != nil {
-	// 						fmt.Println(err.Error())
-	// 					}
-	// 				}
-	// 			}
-	// 		}
-
-	// 		if err := db.Update(hashtags); err != nil {
-	// 			fmt.Println(err)
-	// 		}
-	// 	}
-	// }
 }
 
 func resolveHashtagType(message *tgbotapi.Message) ([]ChannelMessage, error) {
@@ -296,31 +255,44 @@ func handleCommand(message *tgbotapi.Message) error {
 
 func sendMessageFromText(message *tgbotapi.Message) ([]ChannelMessage, error) {
 	hashtagList := getHashtagList(message.Text, message.Entities)
-	channelIdList := getChannelList(hashtagList)
-	var user *tgbotapi.User
-	user = message.From
-	if userMention, ok := getUserMention(message.Entities, []rune(message.Text)); ok {
-		user = userMention
+
+	// channelIdList := getChannelList(hashtagList)
+	// var user *tgbotapi.User
+	// user = message.From
+	// if userMention, ok := getUserMention(message.Entities, []rune(message.Text)); ok {
+	// 	user = userMention
+	// }
+
+	err := replyToChannelsHandler.Handle(context.TODO(), command.ReplyToChannels{
+		Text:        message.Text,
+		HashtagList: hashtagList,
+		UserName:    message.From.UserName,
+		UserId:      strconv.Itoa(message.From.ID),
+		MessageId:   message.MessageID,
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	var channelMessageList = make([]ChannelMessage, 0)
-	for _, chId := range channelIdList {
-		toSend := tgbotapi.NewMessage(chId, fmt.Sprintf("%s\n%s", message.Text, getRefLink(user)))
-		toSend.ParseMode = "html"
-		toSend.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
-			),
-		)
+	return []ChannelMessage{}, nil
+	// var channelMessageList = make([]ChannelMessage, 0)
+	// for _, chId := range channelIdList {
+	// 	toSend := tgbotapi.NewMessage(chId, fmt.Sprintf("%s\n%s", message.Text, getRefLink(user)))
+	// 	toSend.ParseMode = "html"
+	// 	toSend.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+	// 		tgbotapi.NewInlineKeyboardRow(
+	// 			tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
+	// 		),
+	// 	)
 
-		msg, err := bot.Send(toSend)
-		if err != nil {
-			return nil, err
-		}
+	// 	msg, err := bot.Send(toSend)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
 
-		channelMessageList = append(channelMessageList, ChannelMessage{ChannelId: chId, MessageId: int64(msg.MessageID)})
-	}
-	return channelMessageList, nil
+	// 	channelMessageList = append(channelMessageList, ChannelMessage{ChannelId: chId, MessageId: int64(msg.MessageID)})
+	// }
 }
 
 func sendMessageFromCaption(message *tgbotapi.Message) ([]ChannelMessage, error) {
@@ -419,34 +391,3 @@ func getUserMention(entities []tgbotapi.MessageEntity, text []rune) (*tgbotapi.U
 	}
 	return nil, false
 }
-
-// func editMessage(message *tgbotapi.Message) ([]ChannelMessage, error) {
-// 	hashtagList := getHashtagList(message.Text, message.Entities)
-// 	channelIdList := getChannelList(hashtagList)
-// 	// channelList := messages[strconv.Itoa(message.MessageID)]
-
-// 	var user *tgbotapi.User
-// 	user = message.From
-// 	if userMention, ok := getUserMention(message.Entities, []rune(message.Text)); ok {
-// 		user = userMention
-// 	}
-// 	var channelMessageList = make([]ChannelMessage, 0)
-// 	for _, chId := range channelIdList {
-// 		toSend := tgbotapi.NewMessage(chId, fmt.Sprintf("%s\n%s", message.Text, getRefLink(user)))
-// 		toSend.ParseMode = "html"
-// 		toSend.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-// 			tgbotapi.NewInlineKeyboardRow(
-// 				tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/%s/%d", message.Chat.UserName, message.MessageID)),
-// 			),
-// 		)
-
-// 		msg, err := bot.Send(toSend)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		channelMessageList = append(channelMessageList, ChannelMessage{ChannelId: chId, MessageId: int64(msg.MessageID)})
-// 	}
-// 	return channelMessageList, nil
-
-// }

@@ -16,8 +16,8 @@ type PostgresChannelRepository struct {
 	conn *sql.DB
 }
 
-func NewPostgresChannelRepository(conn *sql.DB) PostgresChannelRepository {
-	return PostgresChannelRepository{conn}
+func NewPostgresChannelRepository(conn *sql.DB) *PostgresChannelRepository {
+	return &PostgresChannelRepository{conn}
 }
 
 func (r *PostgresChannelRepository) GetChannelsByHashtags(ctx context.Context, hashtags []string) ([]domain.Channel, error) {

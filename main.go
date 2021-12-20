@@ -87,7 +87,7 @@ func main() {
 	PanicIfErr(err)
 
 	// channelRepo := adapter.NewMemoryChannelRepository()
-	channelRepo := adapter.NewPostgresChannelRepository(memRepo)
+	channelRepo := adapter.NewPostgresChannelRepository(dbConn)
 	messageSender := adapter.NewMessageSender(bot)
 	replyToChannelsHandler = command.NewForwardToChannelsHandler(channelRepo, messageSender)
 

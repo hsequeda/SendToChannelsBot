@@ -11,8 +11,8 @@ import (
 )
 
 type TelegramBotUpdateHandler struct {
-	updateChan      tgbotapi.UpdatesChannel
-	replyToChannels command.ReplyToChannelsHandler
+	updateChan        tgbotapi.UpdatesChannel
+	forwardToChannels command.ForwardToChannelsHandler
 }
 
 const (
@@ -39,7 +39,7 @@ func (t *TelegramBotUpdateHandler) Run() {
 				continue
 			}
 
-			t.ReplyToChannels(message)
+			t.forwardToChannel(message)
 		}
 	}
 }
@@ -52,26 +52,26 @@ func (t *TelegramBotUpdateHandler) reportCommand(message Message) {
 	realMsgAuthorEntity := message.Mentions()[0]
 	shortedText := message.Utf16Text()[realMsgAuthorEntity.Offset+realMsgAuthorEntity.Length:]
 	if message.HasHashtag() {
-		if err := t.replyToChannels.Handle(context.TODO(), command.ReplyToChannels{
+		if err := t.forwardToChannels.Handle(context.TODO(), command.ForwardToChannels{
 			Text:        string(utf16.Decode(shortedText)),
 			HashtagList: message.Hashtags().StrHashtags(),
 			UserName:    realMsgAuthorEntity.UsernameStr(),
-			UserId:      strconv.Itoa(message.From.ID),
-			MessageId:   message.MessageID,
+			UserID:      strconv.Itoa(message.From.ID),
+			MessageID:   message.MessageID,
 		}); err != nil {
 			log.Println(err)
 		}
 	}
 }
 
-func (t *TelegramBotUpdateHandler) ReplyToChannels(message Message) {
-	if message.HasHashtag() { //  TODO add  ( or len(message.CaptionEntities) != 0)
-		if err := t.replyToChannels.Handle(context.TODO(), command.ReplyToChannels{
+func (t *TelegramBotUpdateHandler) forwardToChannel(message Message) {
+	if message.HasHashtag() {
+		if err := t.forwardToChannels.Handle(context.TODO(), command.ForwardToChannels{
 			Text:        message.Text,
 			HashtagList: message.Hashtags().StrHashtags(),
 			UserName:    message.From.UserName,
-			UserId:      strconv.Itoa(message.From.ID),
-			MessageId:   message.MessageID,
+			UserID:      strconv.Itoa(message.From.ID),
+			MessageID:   message.MessageID,
 		}); err != nil {
 			log.Println(err)
 		}

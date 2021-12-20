@@ -31,8 +31,8 @@ func (m Message) Utf16Text() []uint16 {
 }
 
 func (m Message) HasHashtag() bool {
-	for i := range m.Entities {
-		if m.Entities[i].Type == EntityTypeHashtag {
+	for i := range m.Entities() {
+		if m.Entities()[i].Type == EntityTypeHashtag {
 			return true
 		}
 	}
@@ -47,10 +47,8 @@ func (m Message) Hashtags() HashtagEntities {
 		return nil
 	}
 
-	entities := m.Entities // TODO add conditionals to handle caption entities
-
 	hashtags := make([]HashtagEntity, 0)
-	for _, e := range entities {
+	for _, e := range m.Entities() {
 		if e.Type == EntityTypeHashtag {
 			hashtagEntity, _ := NewHashtagEntity(e, m.Utf16Text())
 			hashtags = append(hashtags, hashtagEntity)
@@ -61,10 +59,8 @@ func (m Message) Hashtags() HashtagEntities {
 }
 
 func (m Message) Mentions() []MentionEntity {
-	entities := m.Entities // TODO add conditionals to handle caption entities
-
 	mentions := make([]MentionEntity, 0)
-	for _, e := range entities {
+	for _, e := range m.Entities() {
 		if e.Type == EntityTypeMention {
 			mentionEntity, _ := NewMentionEntity(e, m.Utf16Text())
 			mentions = append(mentions, mentionEntity)
@@ -77,4 +73,12 @@ func (m Message) Mentions() []MentionEntity {
 // IsCaption returns if Message is a "Caption Message"
 func (m Message) IsCaption() bool {
 	return m.Caption != ""
+}
+
+func (m Message) Entities() []tgbotapi.MessageEntity {
+	if m.IsCaption() {
+		return m.Message.CaptionEntities
+	}
+
+	return m.Message.Entities
 }

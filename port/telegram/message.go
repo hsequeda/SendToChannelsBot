@@ -27,6 +27,10 @@ func MessageFromTgbotApiMessage(message *tgbotapi.Message) (Message, error) {
 
 // Utf16Text returns the message text in Utf-16 (Format using by telegram)
 func (m Message) Utf16Text() []uint16 {
+	if m.IsCaption() {
+		return utf16.Encode([]rune(m.Caption))
+	}
+
 	return utf16.Encode([]rune(m.Text))
 }
 
@@ -81,4 +85,13 @@ func (m Message) Entities() []tgbotapi.MessageEntity {
 	}
 
 	return m.Message.Entities
+}
+
+// PhotoID return the message photo ID. If message doesn't have photo return an empty string
+func (m Message) PhotoID() string {
+	if len(m.Photo) == 0 {
+		return ""
+	}
+
+	return m.Photo[0].FileID
 }

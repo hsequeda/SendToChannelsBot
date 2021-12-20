@@ -8,6 +8,11 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/stdevHsequeda/SendToChannelsBot/app/command"
+	"github.com/stdevHsequeda/SendToChannelsBot/domain"
+)
+
+const (
+	CommandReported = "informo"
 )
 
 type TelegramBotUpdateHandler struct {
@@ -15,9 +20,15 @@ type TelegramBotUpdateHandler struct {
 	forwardToChannels command.ForwardToChannelsHandler
 }
 
-const (
-	CommandReported = "informo"
-)
+func NewTelegramBotUpdateHandler(
+	updateChan tgbotapi.UpdatesChannel,
+	forwardToChannels command.ForwardToChannelsHandler,
+) TelegramBotUpdateHandler {
+	return TelegramBotUpdateHandler{
+		updateChan:        updateChan,
+		forwardToChannels: forwardToChannels,
+	}
+}
 
 func (t *TelegramBotUpdateHandler) Run() {
 	for telegramUpdate := range t.updateChan {
@@ -52,12 +63,22 @@ func (t *TelegramBotUpdateHandler) reportCommand(message Message) {
 	realMsgAuthorEntity := message.Mentions()[0]
 	shortedText := message.Utf16Text()[realMsgAuthorEntity.Offset+realMsgAuthorEntity.Length:]
 	if message.HasHashtag() {
+		messageType := domain.MessageTypeTextOnly
+		file := domain.EmptyFile
+
+		if message.PhotoID() != "" {
+			messageType = domain.MessageTypePhoto
+			file, _ = domain.NewTgFile(message.PhotoID(), domain.TgFileTypePhoto)
+		}
+
 		if err := t.forwardToChannels.Handle(context.TODO(), command.ForwardToChannels{
 			Text:        string(utf16.Decode(shortedText)),
 			HashtagList: message.Hashtags().StrHashtags(),
 			UserName:    realMsgAuthorEntity.UsernameStr(),
 			UserID:      strconv.Itoa(message.From.ID),
 			MessageID:   message.MessageID,
+			MessageType: messageType,
+			File:        file,
 		}); err != nil {
 			log.Println(err)
 		}
@@ -66,12 +87,22 @@ func (t *TelegramBotUpdateHandler) reportCommand(message Message) {
 
 func (t *TelegramBotUpdateHandler) forwardToChannel(message Message) {
 	if message.HasHashtag() {
+		messageType := domain.MessageTypeTextOnly
+		file := domain.EmptyFile
+
+		if message.PhotoID() != "" {
+			messageType = domain.MessageTypePhoto
+			file, _ = domain.NewTgFile(message.PhotoID(), domain.TgFileTypePhoto)
+		}
+
 		if err := t.forwardToChannels.Handle(context.TODO(), command.ForwardToChannels{
 			Text:        message.Text,
 			HashtagList: message.Hashtags().StrHashtags(),
 			UserName:    message.From.UserName,
 			UserID:      strconv.Itoa(message.From.ID),
 			MessageID:   message.MessageID,
+			MessageType: messageType,
+			File:        file,
 		}); err != nil {
 			log.Println(err)
 		}

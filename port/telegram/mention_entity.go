@@ -17,7 +17,7 @@ func NewMentionEntity(entity tgbotapi.MessageEntity, utf16Text []uint16) (Mentio
 		return MentionEntity{}, errors.New("mention entity need to be of type 'mention'")
 	}
 
-	username := utf16Text[entity.Offset : entity.Offset+entity.Length]
+	username := utf16Text[entity.Offset+1 : entity.Offset+entity.Length]
 	return MentionEntity{
 		MessageEntity: entity,
 		username:      username,

@@ -24,3 +24,7 @@ generate_db_model:
 
 integration_test:
 	go test --race -v -count=1 -p=8 -parallel=8 ./...
+
+.PHONY: run
+run:
+	go run main.go

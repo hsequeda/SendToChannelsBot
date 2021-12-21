@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	CommandReported = "informo"
+	CommandReported = "dijo"
 )
 
 type TelegramBotUpdateHandler struct {

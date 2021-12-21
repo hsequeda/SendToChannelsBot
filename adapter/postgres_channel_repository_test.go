@@ -85,6 +85,10 @@ func TestPostgresChannelRepository_GetChannelByHashtags(t *testing.T) {
 	channels, err = repo.GetChannelsByHashtags(context.Background(), []string{"levadura"})
 	require.NoError(t, err)
 	assert.Len(t, channels, 0)
+
+	channels, err = repo.GetChannelsByHashtags(context.Background(), []string{"lavadora", "reina"})
+	require.NoError(t, err)
+	assert.Len(t, channels, 2)
 }
 
 func newPostgresChannelRepository(t *testing.T) *adapter.PostgresChannelRepository {

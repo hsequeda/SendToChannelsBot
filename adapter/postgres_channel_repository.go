@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/stdevHsequeda/SendToChannelsBot/adapter/model"
@@ -21,7 +22,12 @@ func NewPostgresChannelRepository(conn *sql.DB) *PostgresChannelRepository {
 }
 
 func (r *PostgresChannelRepository) GetChannelsByHashtags(ctx context.Context, hashtags []string) ([]domain.Channel, error) {
-	channelModels, err := model.Channels(qm.WhereIn("hashtags @> ARRAY[?]::varchar[]", strings.Join(hashtags, ","))).All(ctx, r.conn)
+	var hashtagsWithQuotes = make([]string, len(hashtags), cap(hashtags))
+	for e := range hashtags {
+		hashtagsWithQuotes[e] = fmt.Sprintf("'%s'", hashtags[e])
+	}
+
+	channelModels, err := model.Channels(qm.Where(fmt.Sprintf("hashtags && ARRAY[%s]::varchar[]", strings.Join(hashtagsWithQuotes, ",")))).All(ctx, r.conn)
 	if err != nil {
 		return nil, err
 	}

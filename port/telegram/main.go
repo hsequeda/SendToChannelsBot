@@ -96,7 +96,7 @@ func (t *TelegramBotUpdateHandler) forwardToChannel(message Message) {
 		}
 
 		if err := t.forwardToChannels.Handle(context.TODO(), command.ForwardToChannels{
-			Text:        message.Text,
+			Text:        string(utf16.Decode(message.Utf16Text())),
 			HashtagList: message.Hashtags().StrHashtags(),
 			UserName:    message.From.UserName,
 			UserID:      strconv.Itoa(message.From.ID),

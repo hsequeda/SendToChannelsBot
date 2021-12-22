@@ -427,7 +427,7 @@ func testMessagesSelect(t *testing.T) {
 }
 
 var (
-	messageDBTypes = map[string]string{`ID`: `character varying`, `Hashtags`: `ARRAYcharacter varying`, `Channelmessages`: `json`}
+	messageDBTypes = map[string]string{`ID`: `character varying`, `Hashtags`: `ARRAYcharacter varying`, `ChannelMessages`: `json`}
 	_              = bytes.MinRead
 )
 

@@ -26,7 +26,7 @@ import (
 type Message struct {
 	ID              string            `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Hashtags        types.StringArray `boil:"hashtags" json:"hashtags" toml:"hashtags" yaml:"hashtags"`
-	Channelmessages types.JSON        `boil:"channelmessages" json:"channelmessages" toml:"channelmessages" yaml:"channelmessages"`
+	ChannelMessages types.JSON        `boil:"channel_messages" json:"channel_messages" toml:"channel_messages" yaml:"channel_messages"`
 
 	R *messageR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L messageL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -35,21 +35,21 @@ type Message struct {
 var MessageColumns = struct {
 	ID              string
 	Hashtags        string
-	Channelmessages string
+	ChannelMessages string
 }{
 	ID:              "id",
 	Hashtags:        "hashtags",
-	Channelmessages: "channelmessages",
+	ChannelMessages: "channel_messages",
 }
 
 var MessageTableColumns = struct {
 	ID              string
 	Hashtags        string
-	Channelmessages string
+	ChannelMessages string
 }{
 	ID:              "message.id",
 	Hashtags:        "message.hashtags",
-	Channelmessages: "message.channelmessages",
+	ChannelMessages: "message.channel_messages",
 }
 
 // Generated where
@@ -78,11 +78,11 @@ func (w whereHelpertypes_JSON) GTE(x types.JSON) qm.QueryMod {
 var MessageWhere = struct {
 	ID              whereHelperstring
 	Hashtags        whereHelpertypes_StringArray
-	Channelmessages whereHelpertypes_JSON
+	ChannelMessages whereHelpertypes_JSON
 }{
 	ID:              whereHelperstring{field: "\"message\".\"id\""},
 	Hashtags:        whereHelpertypes_StringArray{field: "\"message\".\"hashtags\""},
-	Channelmessages: whereHelpertypes_JSON{field: "\"message\".\"channelmessages\""},
+	ChannelMessages: whereHelpertypes_JSON{field: "\"message\".\"channel_messages\""},
 }
 
 // MessageRels is where relationship names are stored.
@@ -102,8 +102,8 @@ func (*messageR) NewStruct() *messageR {
 type messageL struct{}
 
 var (
-	messageAllColumns            = []string{"id", "hashtags", "channelmessages"}
-	messageColumnsWithoutDefault = []string{"id", "hashtags", "channelmessages"}
+	messageAllColumns            = []string{"id", "hashtags", "channel_messages"}
+	messageColumnsWithoutDefault = []string{"id", "hashtags", "channel_messages"}
 	messageColumnsWithDefault    = []string{}
 	messagePrimaryKeyColumns     = []string{"id"}
 )

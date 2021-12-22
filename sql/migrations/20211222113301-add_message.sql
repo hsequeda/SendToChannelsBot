@@ -3,7 +3,7 @@
 CREATE TABLE message (
   id VARCHAR NOT NULL,
   hashtags VARCHAR ARRAY NOT NULL,
-  channelMessages JSON NOT NULL,
+  channel_messages JSON NOT NULL,
   PRIMARY KEY (id)
 );
 

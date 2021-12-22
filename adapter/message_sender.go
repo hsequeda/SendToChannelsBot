@@ -16,18 +16,18 @@ func NewMessageSender(tgBot *tgbotapi.BotAPI) *TgMessageSender {
 	return &TgMessageSender{tgBot}
 }
 
-func (t *TgMessageSender) SendMessageToTgChan(tgChanId string, text string, username string, originMessageId string, tgFile domain.TgFile) error {
+func (t *TgMessageSender) SendMessageToTgChan(tgChanId string, text string, username string, originMessageId string, tgFile domain.TgFile) (domain.ChannelMessage, error) {
 	if tgFile == domain.EmptyFile {
 		return t.sendMessageToTgChan(tgChanId, text, username, originMessageId, tgFile)
 	}
 
-	return t.sendPhotoToTgChan(tgChanId, text, username, originMessageId, tgFile)
+	return domain.ChannelMessage{}, t.sendPhotoToTgChan(tgChanId, text, username, originMessageId, tgFile)
 }
 
-func (t *TgMessageSender) sendMessageToTgChan(tgChanId string, text string, username string, originMessageId string, tgFile domain.TgFile) error {
+func (t *TgMessageSender) sendMessageToTgChan(tgChanId string, text string, username string, originMessageId string, tgFile domain.TgFile) (domain.ChannelMessage, error) {
 	chatID, err := strconv.ParseInt(tgChanId, 10, 64)
 	if err != nil {
-		return err
+		return domain.ChannelMessage{}, err
 	}
 
 	toSend := tgbotapi.NewMessage(chatID, fmt.Sprintf("%s\n  \n <a href=\"http://t.me/%s\">Escribir al autor👤(@%s)</a>", text, username, username))
@@ -38,18 +38,18 @@ func (t *TgMessageSender) sendMessageToTgChan(tgChanId string, text string, user
 			tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/DondeHayEnLaHabana/%s", originMessageId)),
 		),
 	)
-	_, err = t.tgBot.Send(toSend)
+	sendedMessage, err := t.tgBot.Send(toSend)
 	if err != nil {
-		return err
+		return domain.ChannelMessage{}, err
 	}
 
-	return nil
+	return domain.NewChannelMessage(fmt.Sprint(sendedMessage.MessageID), tgChanId)
 }
 
-func (t *TgMessageSender) sendPhotoToTgChan(tgChanId string, text string, username string, originMessageId string, tgFile domain.TgFile) error {
+func (t *TgMessageSender) sendPhotoToTgChan(tgChanId string, text string, username string, originMessageId string, tgFile domain.TgFile) (domain.ChannelMessage, error) {
 	chatID, err := strconv.ParseInt(tgChanId, 10, 64)
 	if err != nil {
-		return err
+		return domain.ChannelMessage{}, err
 	}
 
 	toSend := tgbotapi.NewPhotoShare(chatID, tgFile.ID())
@@ -60,10 +60,10 @@ func (t *TgMessageSender) sendPhotoToTgChan(tgChanId string, text string, userna
 			tgbotapi.NewInlineKeyboardButtonURL("Ir al mensaje", fmt.Sprintf("https://t.me/DondeHayEnLaHabana/%s", originMessageId)),
 		),
 	)
-	_, err = t.tgBot.Send(toSend)
+	sendedMessage, err := t.tgBot.Send(toSend)
 	if err != nil {
-		return err
+		return domain.ChannelMessage{}, err
 	}
 
-	return nil
+	return domain.NewChannelMessage(fmt.Sprint(sendedMessage.MessageID), tgChanId)
 }

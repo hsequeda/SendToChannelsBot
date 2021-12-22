@@ -7,4 +7,6 @@ import "testing"
 
 func TestUpsert(t *testing.T) {
 	t.Run("Channels", testChannelsUpsert)
+
+	t.Run("Messages", testMessagesUpsert)
 }

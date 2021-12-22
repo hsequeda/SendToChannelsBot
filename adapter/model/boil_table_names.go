@@ -5,6 +5,8 @@ package model
 
 var TableNames = struct {
 	Channel string
+	Message string
 }{
 	Channel: "channel",
+	Message: "message",
 }

@@ -13,47 +13,59 @@ import "testing"
 // Separating the tests thusly grants avoidance of Postgres deadlocks.
 func TestParent(t *testing.T) {
 	t.Run("Channels", testChannels)
+	t.Run("Messages", testMessages)
 }
 
 func TestDelete(t *testing.T) {
 	t.Run("Channels", testChannelsDelete)
+	t.Run("Messages", testMessagesDelete)
 }
 
 func TestQueryDeleteAll(t *testing.T) {
 	t.Run("Channels", testChannelsQueryDeleteAll)
+	t.Run("Messages", testMessagesQueryDeleteAll)
 }
 
 func TestSliceDeleteAll(t *testing.T) {
 	t.Run("Channels", testChannelsSliceDeleteAll)
+	t.Run("Messages", testMessagesSliceDeleteAll)
 }
 
 func TestExists(t *testing.T) {
 	t.Run("Channels", testChannelsExists)
+	t.Run("Messages", testMessagesExists)
 }
 
 func TestFind(t *testing.T) {
 	t.Run("Channels", testChannelsFind)
+	t.Run("Messages", testMessagesFind)
 }
 
 func TestBind(t *testing.T) {
 	t.Run("Channels", testChannelsBind)
+	t.Run("Messages", testMessagesBind)
 }
 
 func TestOne(t *testing.T) {
 	t.Run("Channels", testChannelsOne)
+	t.Run("Messages", testMessagesOne)
 }
 
 func TestAll(t *testing.T) {
 	t.Run("Channels", testChannelsAll)
+	t.Run("Messages", testMessagesAll)
 }
 
 func TestCount(t *testing.T) {
 	t.Run("Channels", testChannelsCount)
+	t.Run("Messages", testMessagesCount)
 }
 
 func TestInsert(t *testing.T) {
 	t.Run("Channels", testChannelsInsert)
 	t.Run("Channels", testChannelsInsertWhitelist)
+	t.Run("Messages", testMessagesInsert)
+	t.Run("Messages", testMessagesInsertWhitelist)
 }
 
 // TestToOne tests cannot be run in parallel
@@ -98,20 +110,25 @@ func TestToManyRemove(t *testing.T) {}
 
 func TestReload(t *testing.T) {
 	t.Run("Channels", testChannelsReload)
+	t.Run("Messages", testMessagesReload)
 }
 
 func TestReloadAll(t *testing.T) {
 	t.Run("Channels", testChannelsReloadAll)
+	t.Run("Messages", testMessagesReloadAll)
 }
 
 func TestSelect(t *testing.T) {
 	t.Run("Channels", testChannelsSelect)
+	t.Run("Messages", testMessagesSelect)
 }
 
 func TestUpdate(t *testing.T) {
 	t.Run("Channels", testChannelsUpdate)
+	t.Run("Messages", testMessagesUpdate)
 }
 
 func TestSliceUpdateAll(t *testing.T) {
 	t.Run("Channels", testChannelsSliceUpdateAll)
+	t.Run("Messages", testMessagesSliceUpdateAll)
 }

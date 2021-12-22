@@ -58,6 +58,7 @@ func (t *TelegramBotUpdateHandler) Run() {
 func (t *TelegramBotUpdateHandler) reportCommand(message Message) {
 	if len(message.Mentions()) == 0 {
 		log.Println("error: missed mention in report command")
+		return
 	}
 
 	realMsgAuthorEntity := message.Mentions()[0]

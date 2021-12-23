@@ -21,7 +21,7 @@ func (t *TgMessageSender) SendMessageToTgChan(tgChanId string, text string, user
 		return t.sendMessageToTgChan(tgChanId, text, username, originMessageId, tgFile)
 	}
 
-	return domain.ChannelMessage{}, t.sendPhotoToTgChan(tgChanId, text, username, originMessageId, tgFile)
+	return t.sendPhotoToTgChan(tgChanId, text, username, originMessageId, tgFile)
 }
 
 func (t *TgMessageSender) sendMessageToTgChan(tgChanId string, text string, username string, originMessageId string, tgFile domain.TgFile) (domain.ChannelMessage, error) {

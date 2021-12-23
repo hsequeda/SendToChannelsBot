@@ -12,7 +12,7 @@ type MemoryChannelRepository struct {
 
 func NewMemoryChannelRepository() *MemoryChannelRepository {
 	return &MemoryChannelRepository{channels: map[string]domain.Channel{
-		"-1001768605818": domain.Channel{
+		"-1001768605818": {
 			Id:       "-1001768605818",
 			Hashtags: []string{"#te"},
 		},

@@ -22,8 +22,9 @@ migration_status:
 generate_db_model:
 	sqlboiler -d --wipe -o adapter/model/ -p model psql --add-global-variants --no-hooks
 
-integration_test:
-	go test --race -v -count=1 -p=8 -parallel=8 ./...
+.PHONY: test
+test:
+	@./scripts/test.sh .test.env
 
 .PHONY: run
 run:

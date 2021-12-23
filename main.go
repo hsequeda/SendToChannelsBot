@@ -49,8 +49,9 @@ func main() {
 
 	// channelRepo := adapter.NewMemoryChannelRepository()
 	channelRepo := adapter.NewPostgresChannelRepository(dbConn)
+	messageRepository := adapter.NewPostgresMessageRepository(dbConn)
 	messageSender := adapter.NewMessageSender(bot)
-	replyToChannelsHandler = command.NewForwardToChannelsHandler(channelRepo, messageSender)
+	replyToChannelsHandler = command.NewForwardToChannelsHandler(channelRepo, messageRepository, messageSender)
 
 	updates, err := getUpdateCh()
 	if err != nil {

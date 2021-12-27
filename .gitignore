@@ -21,4 +21,4 @@
 #Config
 .setUpEnvVars.sh
 .env
-.test.env
+.*.env

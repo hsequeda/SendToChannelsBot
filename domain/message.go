@@ -14,10 +14,6 @@ func NewMessage(id string, text string, hashtags []string) (Message, error) {
 		return Message{}, errors.New("message id is empty")
 	}
 
-	if text == "" {
-		return Message{}, errors.New("message text is empty")
-	}
-
 	if len(hashtags) == 0 {
 		return Message{}, errors.New("can't create a message without hashtags")
 	}

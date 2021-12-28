@@ -25,6 +25,6 @@ func NewMessage(id string, text string, hashtags []string) (Message, error) {
 	}, nil
 }
 
-func (m Message) AddChannelMessage(channelMessage ChannelMessage) {
+func (m *Message) AddChannelMessage(channelMessage ChannelMessage) {
 	m.ChannelMessages = append(m.ChannelMessages, channelMessage)
 }

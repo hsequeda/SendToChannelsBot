@@ -1,13 +1,13 @@
 package adapter_test
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/stdevHsequeda/SendToChannelsBot/adapter"
 	"github.com/stdevHsequeda/SendToChannelsBot/domain"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,7 +22,8 @@ func TestTgMessageSender_SendMessageToTgChan(t *testing.T) {
 
 		message, err := tgMessageSender.SendMessageToTgChan(chatID, "a message to test the message sender", "test_username", "origin message id", domain.EmptyFile)
 		require.NoError(t, err)
-		fmt.Printf("message = %#v\n", message)
+		assert.Equal(t, chatID, message.ChannelID)
+		assert.NotEqual(t, "", message.ID)
 	})
 }
 

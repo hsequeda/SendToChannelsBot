@@ -60,7 +60,9 @@ func TestPostgresMessageRepository_GetByID(t *testing.T) {
 		require.NoError(t, err)
 		requestedMsg, err := repo.GetByID(context.Background(), message.ID)
 		require.NoError(t, err)
-		assert.Equal(t, message, requestedMsg)
+		assert.Equal(t, message.ID, requestedMsg.ID)
+		assert.Equal(t, message.Hashtags, requestedMsg.Hashtags)
+		assert.Equal(t, message.ChannelMessages, requestedMsg.ChannelMessages)
 	})
 }
 

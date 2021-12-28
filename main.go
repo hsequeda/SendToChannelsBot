@@ -47,7 +47,6 @@ func main() {
 	dbConn, err := adapter.NewPostgresConnPool()
 	PanicIfErr(err)
 
-	// channelRepo := adapter.NewMemoryChannelRepository()
 	channelRepo := adapter.NewPostgresChannelRepository(dbConn)
 	messageRepository := adapter.NewPostgresMessageRepository(dbConn)
 	messageSender := adapter.NewMessageSender(bot)

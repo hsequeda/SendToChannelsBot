@@ -13,7 +13,7 @@ type ForwardToChannels struct {
 	HashtagList []string
 	UserName    string
 	UserID      string
-	MessageID   int
+	MessageID   int64
 	MessageType domain.MessageType
 	File        domain.TgFile
 }
@@ -40,7 +40,12 @@ func (h ForwardToChannelsHandler) Handle(ctx context.Context, cmd ForwardToChann
 		return err
 	}
 
-	message, err := domain.NewMessage(fmt.Sprint(cmd.MessageID), cmd.Text, cmd.HashtagList)
+	messageID, err := domain.NewMessageIDFromInt64(cmd.MessageID)
+	if err != nil {
+		return err
+	}
+
+	message, err := domain.NewMessage(messageID, cmd.Text, cmd.HashtagList)
 	if err != nil {
 		log.Println("[ForwardToChannels] error: ", err.Error())
 		return err

@@ -77,7 +77,7 @@ func (t *TelegramBotUpdateHandler) reportCommand(message Message) {
 			HashtagList: message.Hashtags().StrHashtags(),
 			UserName:    realMsgAuthorEntity.UsernameStr(),
 			UserID:      strconv.Itoa(message.From.ID),
-			MessageID:   message.MessageID,
+			MessageID:   int64(message.MessageID),
 			MessageType: messageType,
 			File:        file,
 		}); err != nil {
@@ -101,7 +101,7 @@ func (t *TelegramBotUpdateHandler) forwardToChannel(message Message) {
 			HashtagList: message.Hashtags().StrHashtags(),
 			UserName:    message.From.UserName,
 			UserID:      strconv.Itoa(message.From.ID),
-			MessageID:   message.MessageID,
+			MessageID:   int64(message.MessageID),
 			MessageType: messageType,
 			File:        file,
 		}); err != nil {

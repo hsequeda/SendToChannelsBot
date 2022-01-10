@@ -57,8 +57,13 @@ func marshalMessage(model *model.Message) (domain.Message, error) {
 		}
 	}
 
+	messageID, err := domain.NewMessageIDFromStr(model.ID)
+	if err != nil {
+		return domain.Message{}, err
+	}
+
 	return domain.Message{
-		ID:              model.ID,
+		ID:              messageID,
 		Hashtags:        model.Hashtags,
 		ChannelMessages: channelMessages,
 	}, nil
@@ -74,7 +79,7 @@ func unmarshalMessage(message domain.Message) (*model.Message, error) {
 	}
 
 	model := &model.Message{
-		ID:       message.ID,
+		ID:       message.ID.String(),
 		Hashtags: message.Hashtags,
 	}
 	if err := model.ChannelMessages.Marshal(channelMessageModels); err != nil {

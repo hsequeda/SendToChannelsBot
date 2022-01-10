@@ -3,17 +3,13 @@ package domain
 import "errors"
 
 type Message struct {
-	ID              string
+	ID              MessageID
 	Text            string
 	Hashtags        []string
 	ChannelMessages []ChannelMessage
 }
 
-func NewMessage(id string, text string, hashtags []string) (Message, error) {
-	if id == "" {
-		return Message{}, errors.New("message id is empty")
-	}
-
+func NewMessage(id MessageID, text string, hashtags []string) (Message, error) {
 	if len(hashtags) == 0 {
 		return Message{}, errors.New("can't create a message without hashtags")
 	}

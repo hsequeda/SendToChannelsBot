@@ -29,7 +29,6 @@ var replyToChannelsHandler command.ForwardToChannelsHandler
 
 func init() {
 	var err error
-
 	botToken := os.Getenv(BOT_TOKEN)
 	fmt.Printf("botToken = %#v\n", botToken)
 	bot, err = tgbotapi.NewBotAPI(botToken)
@@ -124,6 +123,7 @@ func getUserMention(entities []tgbotapi.MessageEntity, text []rune) (*tgbotapi.U
 		if entity.Type == TextMentionType {
 			return entity.User, true
 		}
+
 		if entity.Type == MentionType {
 			return &tgbotapi.User{
 				UserName: string(utf16.Decode(textUtf16[entity.Offset+1 : entity.Offset+entity.Length])),

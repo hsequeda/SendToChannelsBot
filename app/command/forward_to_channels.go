@@ -8,6 +8,10 @@ import (
 	"github.com/stdevHsequeda/SendToChannelsBot/domain"
 )
 
+// The ForwardToChannels command takes a listened message from the groups and
+// gets the channels that match the hashtags in the message. It then sends a
+// copy of the message to each channel with a reference to the owner and the
+// original message.
 type ForwardToChannels struct {
 	Text        string
 	HashtagList []string
@@ -18,12 +22,14 @@ type ForwardToChannels struct {
 	File        domain.TgFile
 }
 
+// ForwardToChannelsHandler handles the ForwardToChannels command.
 type ForwardToChannelsHandler struct {
 	channelRepository domain.ChannelRepository
 	messageRepository domain.MessageRepository
 	messageSender     domain.TgMessageSender
 }
 
+// NewForwardToChannelsHandler build a new instance of ForwardToChannelsHandler.
 func NewForwardToChannelsHandler(
 	channelRepository domain.ChannelRepository,
 	messageRepository domain.MessageRepository,
@@ -32,6 +38,7 @@ func NewForwardToChannelsHandler(
 	return ForwardToChannelsHandler{channelRepository, messageRepository, messageSender}
 }
 
+// Handle execute the command logic.
 func (h ForwardToChannelsHandler) Handle(ctx context.Context, cmd ForwardToChannels) error {
 	log.Println("[ForwardToChannels] info: start command")
 	channels, err := h.channelRepository.GetChannelsByHashtags(ctx, cmd.HashtagList)

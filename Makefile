@@ -20,7 +20,7 @@ migration_status:
 
 .PHONY: generate_db_model
 generate_db_model:
-	sqlboiler -d --wipe -o adapter/model/ -p model psql --add-global-variants --no-hooks
+	sqlboiler -d --wipe -o pkgs/common/sql/psql_model/ -p psql_model psql --add-global-variants --no-hooks
 
 .PHONY: test
 test:

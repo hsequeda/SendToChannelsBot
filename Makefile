@@ -30,3 +30,8 @@ integration_test:
 .PHONY: run
 run:
 	go run main.go
+
+.PHONY: generate_openapi_server
+generate_openapi_server:
+	oapi-codegen -generate types -o pkgs/account/port/rest/openapi_types.gen.go -package rest api/open_api/account.yml
+	oapi-codegen -generate chi-server -o pkgs/account/port/rest/openapi_api.gen.go -package rest api/open_api/account.yml

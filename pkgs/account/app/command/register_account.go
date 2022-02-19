@@ -6,7 +6,7 @@ import (
 	"github.com/stdevHsequeda/SendToChannelsBot/pkgs/account/domain"
 )
 
-// RegisterAccount TODO
+// RegisterAccount register a new user account in the system
 type RegisterAccount struct {
 	ID         string
 	TelegramID int64

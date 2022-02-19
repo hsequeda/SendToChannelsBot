@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/stdevHsequeda/SendToChannelsBot/adapter/model"
 	"github.com/stdevHsequeda/SendToChannelsBot/domain"
+	model "github.com/stdevHsequeda/SendToChannelsBot/pkgs/common/sql/psql_model"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 

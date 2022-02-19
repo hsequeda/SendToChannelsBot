@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/stdevHsequeda/SendToChannelsBot/adapter/model"
+	model "github.com/stdevHsequeda/SendToChannelsBot/pkgs/common/sql/psql_model"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 

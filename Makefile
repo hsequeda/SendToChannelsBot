@@ -23,8 +23,9 @@ generate_db_model:
 	sqlboiler -d --wipe -o pkgs/common/sql/psql_model/ -p psql_model psql --add-global-variants --no-hooks
 
 .PHONY: test
-test:
-	@./scripts/test.sh .test.env
+integration_test:
+	@echo "Start integration tests...."
+	@./scripts/integration_test.sh .integration_test.env
 
 .PHONY: run
 run:

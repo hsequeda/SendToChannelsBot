@@ -14,5 +14,5 @@ type AccountRepository interface {
 	// GetOneByTgID returns an account by a TelegramID.
 	GetOneByTgID(ctx context.Context, tgID TelegramID) (*Account, error)
 	// GetOneByID returns an account by an ID.
-	GetOneByID(ctx context.Context, id string) (Account, error)
+	GetOneByID(ctx context.Context, id string) (*Account, error)
 }

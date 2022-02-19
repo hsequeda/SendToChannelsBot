@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/stdevHsequeda/SendToChannelsBot/account/domain"
+	"github.com/stdevHsequeda/SendToChannelsBot/pkgs/account/domain"
 )
 
 // RegisterAccount TODO

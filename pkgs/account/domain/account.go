@@ -1,6 +1,9 @@
 package domain
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // Account is a user account
 type Account struct {
@@ -24,16 +27,16 @@ func NewAccount(id string, telegramID TelegramID) (*Account, error) {
 	}, nil
 }
 
-// TODO: implement me!
-// func MapAccountFromRepository(id string, telegramID TelegramID, version uint) *Account {
+// CreateAccountFromRepository map a repository model Account to a domain model Account.
+func CreateAccountFromRepository(id string, telegramID TelegramID, version uint) *Account {
+	account, err := NewAccount(id, telegramID)
+	if err != nil {
+		panic(fmt.Errorf("error creating an account from the repository: %w", err))
+	}
 
-// 	return &Account{
-// 		id:         id,
-// 		telegramID: telegramID,
-// 		version:    1,
-// 		isValid:    true,
-// 	}
-// }
+	account.version = version
+	return account
+}
 
 // ID is the unique identifier of an account
 func (a Account) ID() string {

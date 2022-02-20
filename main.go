@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"unicode/utf16"
@@ -29,19 +31,6 @@ var bot *tgbotapi.BotAPI
 
 var replyToChannelsHandler command.ForwardToChannelsHandler
 
-func init() {
-	var err error
-	botToken := os.Getenv(BOT_TOKEN)
-	fmt.Printf("botToken = %#v\n", botToken)
-	bot, err = tgbotapi.NewBotAPI(botToken)
-	if err != nil {
-		panic(err)
-	}
-
-	port := os.Getenv(PORT)
-	go http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
-}
-
 func main() {
 	fmt.Println("Started")
 
@@ -59,19 +48,28 @@ func main() {
 		},
 	})
 
+	rootRouter := chi.NewRouter()
 	accountRouter := chi.NewRouter()
 	accountModule.BindRouter(accountRouter)
-	http.Handle("/api/v1/account", accountRouter)
+	rootRouter.Mount("/account/api/v1", accountRouter)
+
+	botToken := os.Getenv(BOT_TOKEN)
+	fmt.Printf("botToken = %#v\n", botToken)
+	bot, err = tgbotapi.NewBotAPI(botToken)
+	if err != nil {
+		panic(err)
+	}
+
+	port := os.Getenv(PORT)
 
 	channelRepo := adapter.NewPostgresChannelRepository(psqlConn)
 	messageRepository := adapter.NewPostgresMessageRepository(psqlConn)
 	messageSender := adapter.NewMessageSender(bot)
 	replyToChannelsHandler = command.NewForwardToChannelsHandler(channelRepo, messageRepository, messageSender)
 
-	updates, err := getUpdateCh()
-	if err != nil {
-		panic(err)
-	}
+	updates := getWebhookUpdateChan(rootRouter)
+
+	go http.ListenAndServe(fmt.Sprintf(":%s", port), rootRouter)
 
 	tgUpdateHandler := telegram.NewTelegramBotUpdateHandler(updates, replyToChannelsHandler)
 	tgUpdateHandler.Run()
@@ -83,21 +81,25 @@ func PanicIfErr(err error) {
 	}
 }
 
-func getUpdateCh() (tgbotapi.UpdatesChannel, error) {
-	webhookPath := os.Getenv(WEBHOOK_PATH)
-	if webhookPath != "" {
-		_, err := bot.Request(tgbotapi.NewWebhook(webhookPath))
-		if err != nil {
-			panic(err)
-		}
+func getWebhookUpdateChan(router *chi.Mux) tgbotapi.UpdatesChannel {
+	_, err := bot.Request(tgbotapi.RemoveWebhookConfig{})
+	PanicIfErr(err)
 
-		return bot.ListenForWebhook("/"), nil
-	} else {
-		return bot.GetUpdatesChan(tgbotapi.UpdateConfig{
-			Offset:  0,
-			Timeout: 0,
-		}), nil
-	}
+	_, err = bot.Request(tgbotapi.NewWebhook("http://hsequeda.com:8484/"))
+	PanicIfErr(err)
+
+	ch := make(chan tgbotapi.Update, bot.Buffer)
+
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		bytes, _ := ioutil.ReadAll(r.Body)
+
+		var update tgbotapi.Update
+		json.Unmarshal(bytes, &update)
+
+		ch <- update
+	})
+
+	return ch
 }
 
 func containsHashtag(entities []tgbotapi.MessageEntity) bool {

@@ -55,6 +55,14 @@ func NewModule(conf AccountModuleConfig) *AccountModule {
 }
 
 func (a AccountModule) BindRouter(router chi.Router) http.Handler {
-	router.Use(middleware.BasicAuth("Production Realm", map[string]string{a.basicAuthCredentials.user: a.basicAuthCredentials.pass}))
+	router.Use(
+		middleware.BasicAuth(
+			"Production Realm",
+			map[string]string{
+				a.basicAuthCredentials.user: a.basicAuthCredentials.pass,
+			},
+		),
+	)
+
 	return rest.HandlerFromMux(a.httpServer, router)
 }

@@ -85,7 +85,7 @@ func getWebhookUpdateChan(router *chi.Mux) tgbotapi.UpdatesChannel {
 	_, err := bot.Request(tgbotapi.RemoveWebhookConfig{})
 	PanicIfErr(err)
 
-	_, err = bot.Request(tgbotapi.NewWebhook("http://hsequeda.com:8484/"))
+	_, err = bot.Request(tgbotapi.NewWebhook("https://hsequeda.com:8484/"))
 	PanicIfErr(err)
 
 	ch := make(chan tgbotapi.Update, bot.Buffer)

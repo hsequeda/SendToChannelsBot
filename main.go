@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"unicode/utf16"
@@ -67,8 +65,8 @@ func main() {
 	messageSender := adapter.NewMessageSender(bot)
 	replyToChannelsHandler = command.NewForwardToChannelsHandler(channelRepo, messageRepository, messageSender)
 
-	updates := getWebhookUpdateChan(rootRouter)
-
+	_, err = bot.Request(tgbotapi.RemoveWebhookConfig{})
+	updates := bot.GetUpdatesChan(tgbotapi.NewUpdate(0))
 	go http.ListenAndServe(fmt.Sprintf(":%s", port), rootRouter)
 
 	tgUpdateHandler := telegram.NewTelegramBotUpdateHandler(updates, replyToChannelsHandler)
@@ -81,26 +79,26 @@ func PanicIfErr(err error) {
 	}
 }
 
-func getWebhookUpdateChan(router *chi.Mux) tgbotapi.UpdatesChannel {
-	_, err := bot.Request(tgbotapi.RemoveWebhookConfig{})
-	PanicIfErr(err)
+// func getWebhookUpdateChan(router *chi.Mux) tgbotapi.UpdatesChannel {
+// 	_, err := bot.Request(tgbotapi.RemoveWebhookConfig{})
+// 	PanicIfErr(err)
 
-	_, err = bot.Request(tgbotapi.NewWebhook("https://hsequeda.com:8484/"))
-	PanicIfErr(err)
+// 	_, err = bot.Request(tgbotapi.NewWebhook("https://send_to_channel_bot.hsequeda.com/"))
+// 	PanicIfErr(err)
 
-	ch := make(chan tgbotapi.Update, bot.Buffer)
+// 	ch := make(chan tgbotapi.Update, bot.Buffer)
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		bytes, _ := ioutil.ReadAll(r.Body)
+// 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+// 		bytes, _ := ioutil.ReadAll(r.Body)
 
-		var update tgbotapi.Update
-		json.Unmarshal(bytes, &update)
+// 		var update tgbotapi.Update
+// 		json.Unmarshal(bytes, &update)
 
-		ch <- update
-	})
+// 		ch <- update
+// 	})
 
-	return ch
-}
+// 	return ch
+// }
 
 func containsHashtag(entities []tgbotapi.MessageEntity) bool {
 	for _, entity := range entities {

@@ -13,8 +13,12 @@ type HttpServer struct {
 	app app.App
 }
 
+func NewHttpServer(app app.App) HttpServer {
+	return HttpServer{app}
+}
+
 // (POST /register)
-func (h *HttpServer) Register(w http.ResponseWriter, r *http.Request) {
+func (h HttpServer) Register(w http.ResponseWriter, r *http.Request) {
 	var registerReqBody RegisterReqBody
 	if err := render.Decode(r, &registerReqBody); err != nil {
 		w.WriteHeader(400)

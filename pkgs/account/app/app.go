@@ -16,5 +16,5 @@ func NewApp(registerAccount command.RegisterAccountHandler) App {
 		}{
 			RegisterAccount: registerAccount,
 		},
-	}, nil
+	}
 }

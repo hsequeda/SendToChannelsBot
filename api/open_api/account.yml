@@ -4,10 +4,12 @@ info:
   title: SendToChannel_Account
   description: Account module REST API of the SendToChannel project.
 servers:
-  - url: https://{hostname}/api/account
+  - url: https://{hostname}/api/v{version}/account
     variables:
       hostname:
         default: localhost
+      version:
+        default: 1
 security:
   - basicAuth: []
 paths:

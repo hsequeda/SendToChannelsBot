@@ -6,9 +6,11 @@ import (
 	"os"
 	"unicode/utf16"
 
+	"github.com/go-chi/chi/v5"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/stdevHsequeda/SendToChannelsBot/adapter"
 	"github.com/stdevHsequeda/SendToChannelsBot/app/command"
+	"github.com/stdevHsequeda/SendToChannelsBot/pkgs/account"
 	"github.com/stdevHsequeda/SendToChannelsBot/port/telegram"
 )
 
@@ -43,11 +45,26 @@ func init() {
 func main() {
 	fmt.Println("Started")
 
-	dbConn, err := adapter.NewPostgresConnPool()
+	psqlConn, err := adapter.NewPostgresConnPool()
 	PanicIfErr(err)
 
-	channelRepo := adapter.NewPostgresChannelRepository(dbConn)
-	messageRepository := adapter.NewPostgresMessageRepository(dbConn)
+	accountModule := account.NewModule(account.AccountModuleConfig{
+		PsqlConn: psqlConn,
+		BasicAuthCredentials: struct {
+			User string
+			Pass string
+		}{
+			User: os.Getenv("BASIC_AUTH_USER"),
+			Pass: os.Getenv("BASIC_AUTH_PASS"),
+		},
+	})
+
+	accountRouter := chi.NewRouter()
+	accountModule.BindRouter(accountRouter)
+	http.Handle("/api/v1/account", accountRouter)
+
+	channelRepo := adapter.NewPostgresChannelRepository(psqlConn)
+	messageRepository := adapter.NewPostgresMessageRepository(psqlConn)
 	messageSender := adapter.NewMessageSender(bot)
 	replyToChannelsHandler = command.NewForwardToChannelsHandler(channelRepo, messageRepository, messageSender)
 
@@ -57,7 +74,6 @@ func main() {
 	}
 
 	tgUpdateHandler := telegram.NewTelegramBotUpdateHandler(updates, replyToChannelsHandler)
-
 	tgUpdateHandler.Run()
 }
 

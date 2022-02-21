@@ -5,11 +5,5 @@ services:
     container_name: send_to_channels_bot
     env_file:
       - .env
-    networks:
-      - internal
-      - external
-networks:
-  internal:
-    name: internal
-    internal: true
-  external:
+    ports:
+      - 8484:8484

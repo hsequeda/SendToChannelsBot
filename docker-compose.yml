@@ -2,6 +2,7 @@ version: '3'
 services:
   send_to_channels_bot:
     build: .
+    container_name: send_to_channels_bot
     env_file:
       - .env
     networks:

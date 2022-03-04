@@ -10,7 +10,7 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("Channels", testChannelsUpsert)
 
-	t.Run("GorpMigrations", testGorpMigrationsUpsert)
+	t.Run("Inputs", testInputsUpsert)
 
 	t.Run("Messages", testMessagesUpsert)
 }

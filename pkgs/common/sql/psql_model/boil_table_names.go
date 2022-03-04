@@ -4,13 +4,13 @@
 package psql_model
 
 var TableNames = struct {
-	Account        string
-	Channel        string
-	GorpMigrations string
-	Message        string
+	Account string
+	Channel string
+	Input   string
+	Message string
 }{
-	Account:        "account",
-	Channel:        "channel",
-	GorpMigrations: "gorp_migrations",
-	Message:        "message",
+	Account: "account",
+	Channel: "channel",
+	Input:   "input",
+	Message: "message",
 }

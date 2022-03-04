@@ -14,70 +14,70 @@ import "testing"
 func TestParent(t *testing.T) {
 	t.Run("Accounts", testAccounts)
 	t.Run("Channels", testChannels)
-	t.Run("GorpMigrations", testGorpMigrations)
+	t.Run("Inputs", testInputs)
 	t.Run("Messages", testMessages)
 }
 
 func TestDelete(t *testing.T) {
 	t.Run("Accounts", testAccountsDelete)
 	t.Run("Channels", testChannelsDelete)
-	t.Run("GorpMigrations", testGorpMigrationsDelete)
+	t.Run("Inputs", testInputsDelete)
 	t.Run("Messages", testMessagesDelete)
 }
 
 func TestQueryDeleteAll(t *testing.T) {
 	t.Run("Accounts", testAccountsQueryDeleteAll)
 	t.Run("Channels", testChannelsQueryDeleteAll)
-	t.Run("GorpMigrations", testGorpMigrationsQueryDeleteAll)
+	t.Run("Inputs", testInputsQueryDeleteAll)
 	t.Run("Messages", testMessagesQueryDeleteAll)
 }
 
 func TestSliceDeleteAll(t *testing.T) {
 	t.Run("Accounts", testAccountsSliceDeleteAll)
 	t.Run("Channels", testChannelsSliceDeleteAll)
-	t.Run("GorpMigrations", testGorpMigrationsSliceDeleteAll)
+	t.Run("Inputs", testInputsSliceDeleteAll)
 	t.Run("Messages", testMessagesSliceDeleteAll)
 }
 
 func TestExists(t *testing.T) {
 	t.Run("Accounts", testAccountsExists)
 	t.Run("Channels", testChannelsExists)
-	t.Run("GorpMigrations", testGorpMigrationsExists)
+	t.Run("Inputs", testInputsExists)
 	t.Run("Messages", testMessagesExists)
 }
 
 func TestFind(t *testing.T) {
 	t.Run("Accounts", testAccountsFind)
 	t.Run("Channels", testChannelsFind)
-	t.Run("GorpMigrations", testGorpMigrationsFind)
+	t.Run("Inputs", testInputsFind)
 	t.Run("Messages", testMessagesFind)
 }
 
 func TestBind(t *testing.T) {
 	t.Run("Accounts", testAccountsBind)
 	t.Run("Channels", testChannelsBind)
-	t.Run("GorpMigrations", testGorpMigrationsBind)
+	t.Run("Inputs", testInputsBind)
 	t.Run("Messages", testMessagesBind)
 }
 
 func TestOne(t *testing.T) {
 	t.Run("Accounts", testAccountsOne)
 	t.Run("Channels", testChannelsOne)
-	t.Run("GorpMigrations", testGorpMigrationsOne)
+	t.Run("Inputs", testInputsOne)
 	t.Run("Messages", testMessagesOne)
 }
 
 func TestAll(t *testing.T) {
 	t.Run("Accounts", testAccountsAll)
 	t.Run("Channels", testChannelsAll)
-	t.Run("GorpMigrations", testGorpMigrationsAll)
+	t.Run("Inputs", testInputsAll)
 	t.Run("Messages", testMessagesAll)
 }
 
 func TestCount(t *testing.T) {
 	t.Run("Accounts", testAccountsCount)
 	t.Run("Channels", testChannelsCount)
-	t.Run("GorpMigrations", testGorpMigrationsCount)
+	t.Run("Inputs", testInputsCount)
 	t.Run("Messages", testMessagesCount)
 }
 
@@ -86,8 +86,8 @@ func TestInsert(t *testing.T) {
 	t.Run("Accounts", testAccountsInsertWhitelist)
 	t.Run("Channels", testChannelsInsert)
 	t.Run("Channels", testChannelsInsertWhitelist)
-	t.Run("GorpMigrations", testGorpMigrationsInsert)
-	t.Run("GorpMigrations", testGorpMigrationsInsertWhitelist)
+	t.Run("Inputs", testInputsInsert)
+	t.Run("Inputs", testInputsInsertWhitelist)
 	t.Run("Messages", testMessagesInsert)
 	t.Run("Messages", testMessagesInsertWhitelist)
 }
@@ -135,34 +135,34 @@ func TestToManyRemove(t *testing.T) {}
 func TestReload(t *testing.T) {
 	t.Run("Accounts", testAccountsReload)
 	t.Run("Channels", testChannelsReload)
-	t.Run("GorpMigrations", testGorpMigrationsReload)
+	t.Run("Inputs", testInputsReload)
 	t.Run("Messages", testMessagesReload)
 }
 
 func TestReloadAll(t *testing.T) {
 	t.Run("Accounts", testAccountsReloadAll)
 	t.Run("Channels", testChannelsReloadAll)
-	t.Run("GorpMigrations", testGorpMigrationsReloadAll)
+	t.Run("Inputs", testInputsReloadAll)
 	t.Run("Messages", testMessagesReloadAll)
 }
 
 func TestSelect(t *testing.T) {
 	t.Run("Accounts", testAccountsSelect)
 	t.Run("Channels", testChannelsSelect)
-	t.Run("GorpMigrations", testGorpMigrationsSelect)
+	t.Run("Inputs", testInputsSelect)
 	t.Run("Messages", testMessagesSelect)
 }
 
 func TestUpdate(t *testing.T) {
 	t.Run("Accounts", testAccountsUpdate)
 	t.Run("Channels", testChannelsUpdate)
-	t.Run("GorpMigrations", testGorpMigrationsUpdate)
+	t.Run("Inputs", testInputsUpdate)
 	t.Run("Messages", testMessagesUpdate)
 }
 
 func TestSliceUpdateAll(t *testing.T) {
 	t.Run("Accounts", testAccountsSliceUpdateAll)
 	t.Run("Channels", testChannelsSliceUpdateAll)
-	t.Run("GorpMigrations", testGorpMigrationsSliceUpdateAll)
+	t.Run("Inputs", testInputsSliceUpdateAll)
 	t.Run("Messages", testMessagesSliceUpdateAll)
 }

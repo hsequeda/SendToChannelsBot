@@ -5,13 +5,15 @@ import (
 	"errors"
 )
 
-var InvalidChatErr = errors.New("chat no valid")
-
-type InputFactoryImpl struct {
+type InputFactory struct {
 	telegramClient TelegramService
 }
 
-func (f InputFactoryImpl) Build(ctx context.Context, id int64, ownerID int64, inputType InputType, name string, description string) (Input, error) {
+func NewInputFactory(telegramClient TelegramService) InputFactory {
+	return InputFactory{telegramClient}
+}
+
+func (f InputFactory) Build(ctx context.Context, id int64, ownerID int64, inputType InputType, name string, description string) (Input, error) {
 	if name == "" {
 		return Input{}, errors.New("name is empty")
 	}
@@ -22,7 +24,7 @@ func (f InputFactoryImpl) Build(ctx context.Context, id int64, ownerID int64, in
 	}
 
 	if !ok {
-		return Input{}, InvalidChatErr
+		return Input{}, errors.New("chat no valid")
 	}
 
 	return Input{

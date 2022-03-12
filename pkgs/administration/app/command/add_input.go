@@ -17,12 +17,12 @@ type AddInput struct {
 
 // AddInputHandler is a handler for the AddInput command.
 type AddInputHandler struct {
-	inputFactory    domain.InputFactoryImpl
+	inputFactory    domain.InputFactory
 	inputRepository domain.InputRepository
 }
 
 // NewAddInputHandler insantiate an instance of AddInputHandler.
-func NewAddInputHandler(inputFactory domain.InputFactoryImpl) AddInputHandler {
+func NewAddInputHandler(inputFactory domain.InputFactory, inputRepository domain.InputRepository) AddInputHandler {
 	return AddInputHandler{inputFactory: inputFactory}
 }
 

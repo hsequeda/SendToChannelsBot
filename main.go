@@ -11,6 +11,7 @@ import (
 	"github.com/stdevHsequeda/SendToChannelsBot/adapter"
 	"github.com/stdevHsequeda/SendToChannelsBot/app/command"
 	"github.com/stdevHsequeda/SendToChannelsBot/pkgs/account"
+	"github.com/stdevHsequeda/SendToChannelsBot/pkgs/administration"
 	"github.com/stdevHsequeda/SendToChannelsBot/port/telegram"
 )
 
@@ -35,8 +36,27 @@ func main() {
 	psqlConn, err := adapter.NewPostgresConnPool()
 	PanicIfErr(err)
 
+	botToken := os.Getenv(BOT_TOKEN)
+	fmt.Printf("botToken = %#v\n", botToken)
+	bot, err = tgbotapi.NewBotAPI(botToken)
+	if err != nil {
+		panic(err)
+	}
+
 	accountModule := account.NewModule(account.AccountModuleConfig{
 		PsqlConn: psqlConn,
+		BasicAuthCredentials: struct {
+			User string
+			Pass string
+		}{
+			User: os.Getenv("BASIC_AUTH_USER"),
+			Pass: os.Getenv("BASIC_AUTH_PASS"),
+		},
+	})
+
+	administrationModule := administration.NewModule(administration.ModuleConfiguration{
+		PsqlConn: psqlConn,
+		TgBotAPI: bot,
 		BasicAuthCredentials: struct {
 			User string
 			Pass string
@@ -50,13 +70,9 @@ func main() {
 	accountRouter := chi.NewRouter()
 	accountModule.BindRouter(accountRouter)
 	rootRouter.Mount("/account/api/v1", accountRouter)
-
-	botToken := os.Getenv(BOT_TOKEN)
-	fmt.Printf("botToken = %#v\n", botToken)
-	bot, err = tgbotapi.NewBotAPI(botToken)
-	if err != nil {
-		panic(err)
-	}
+	administrationRouter := chi.NewRouter()
+	administrationModule.BindRouter(administrationRouter)
+	rootRouter.Mount("/administration/api/v1", administrationRouter)
 
 	port := os.Getenv(PORT)
 

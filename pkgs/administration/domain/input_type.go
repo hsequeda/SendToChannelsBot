@@ -25,3 +25,7 @@ func NewInputTypeFromStr(value string) InputType {
 		panic("")
 	}
 }
+
+func (i InputType) Value() string {
+	return i.s
+}

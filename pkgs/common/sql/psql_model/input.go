@@ -23,58 +23,65 @@ import (
 
 // Input is an object representing the database table.
 type Input struct {
-	Ref         string `boil:"ref" json:"ref" toml:"ref" yaml:"ref"`
+	ID          int64  `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Name        string `boil:"name" json:"name" toml:"name" yaml:"name"`
-	Owner       string `boil:"owner" json:"owner" toml:"owner" yaml:"owner"`
+	OwnerID     int64  `boil:"owner_id" json:"owner_id" toml:"owner_id" yaml:"owner_id"`
 	Inputtype   string `boil:"inputtype" json:"inputtype" toml:"inputtype" yaml:"inputtype"`
 	Description string `boil:"description" json:"description" toml:"description" yaml:"description"`
+	Version     int64  `boil:"version" json:"version" toml:"version" yaml:"version"`
 
 	R *inputR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L inputL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var InputColumns = struct {
-	Ref         string
+	ID          string
 	Name        string
-	Owner       string
+	OwnerID     string
 	Inputtype   string
 	Description string
+	Version     string
 }{
-	Ref:         "ref",
+	ID:          "id",
 	Name:        "name",
-	Owner:       "owner",
+	OwnerID:     "owner_id",
 	Inputtype:   "inputtype",
 	Description: "description",
+	Version:     "version",
 }
 
 var InputTableColumns = struct {
-	Ref         string
+	ID          string
 	Name        string
-	Owner       string
+	OwnerID     string
 	Inputtype   string
 	Description string
+	Version     string
 }{
-	Ref:         "input.ref",
+	ID:          "input.id",
 	Name:        "input.name",
-	Owner:       "input.owner",
+	OwnerID:     "input.owner_id",
 	Inputtype:   "input.inputtype",
 	Description: "input.description",
+	Version:     "input.version",
 }
 
 // Generated where
 
 var InputWhere = struct {
-	Ref         whereHelperstring
+	ID          whereHelperint64
 	Name        whereHelperstring
-	Owner       whereHelperstring
+	OwnerID     whereHelperint64
 	Inputtype   whereHelperstring
 	Description whereHelperstring
+	Version     whereHelperint64
 }{
-	Ref:         whereHelperstring{field: "\"input\".\"ref\""},
+	ID:          whereHelperint64{field: "\"input\".\"id\""},
 	Name:        whereHelperstring{field: "\"input\".\"name\""},
-	Owner:       whereHelperstring{field: "\"input\".\"owner\""},
+	OwnerID:     whereHelperint64{field: "\"input\".\"owner_id\""},
 	Inputtype:   whereHelperstring{field: "\"input\".\"inputtype\""},
 	Description: whereHelperstring{field: "\"input\".\"description\""},
+	Version:     whereHelperint64{field: "\"input\".\"version\""},
 }
 
 // InputRels is where relationship names are stored.
@@ -94,10 +101,10 @@ func (*inputR) NewStruct() *inputR {
 type inputL struct{}
 
 var (
-	inputAllColumns            = []string{"ref", "name", "owner", "inputtype", "description"}
-	inputColumnsWithoutDefault = []string{"ref", "name", "owner", "inputtype", "description"}
+	inputAllColumns            = []string{"id", "name", "owner_id", "inputtype", "description", "version"}
+	inputColumnsWithoutDefault = []string{"id", "name", "owner_id", "inputtype", "description", "version"}
 	inputColumnsWithDefault    = []string{}
-	inputPrimaryKeyColumns     = []string{"ref"}
+	inputPrimaryKeyColumns     = []string{"id"}
 )
 
 type (
@@ -218,13 +225,13 @@ func Inputs(mods ...qm.QueryMod) inputQuery {
 }
 
 // FindInputG retrieves a single record by ID.
-func FindInputG(ctx context.Context, ref string, selectCols ...string) (*Input, error) {
-	return FindInput(ctx, boil.GetContextDB(), ref, selectCols...)
+func FindInputG(ctx context.Context, iD int64, selectCols ...string) (*Input, error) {
+	return FindInput(ctx, boil.GetContextDB(), iD, selectCols...)
 }
 
 // FindInput retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindInput(ctx context.Context, exec boil.ContextExecutor, ref string, selectCols ...string) (*Input, error) {
+func FindInput(ctx context.Context, exec boil.ContextExecutor, iD int64, selectCols ...string) (*Input, error) {
 	inputObj := &Input{}
 
 	sel := "*"
@@ -232,10 +239,10 @@ func FindInput(ctx context.Context, exec boil.ContextExecutor, ref string, selec
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"input\" where \"ref\"=$1", sel,
+		"select %s from \"input\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(query, ref)
+	q := queries.Raw(query, iD)
 
 	err := q.Bind(ctx, exec, inputObj)
 	if err != nil {
@@ -599,7 +606,7 @@ func (o *Input) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, e
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), inputPrimaryKeyMapping)
-	sql := "DELETE FROM \"input\" WHERE \"ref\"=$1"
+	sql := "DELETE FROM \"input\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -694,7 +701,7 @@ func (o *Input) ReloadG(ctx context.Context) error {
 // Reload refetches the object from the database
 // using the primary keys with an executor.
 func (o *Input) Reload(ctx context.Context, exec boil.ContextExecutor) error {
-	ret, err := FindInput(ctx, exec, o.Ref)
+	ret, err := FindInput(ctx, exec, o.ID)
 	if err != nil {
 		return err
 	}
@@ -743,21 +750,21 @@ func (o *InputSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) e
 }
 
 // InputExistsG checks if the Input row exists.
-func InputExistsG(ctx context.Context, ref string) (bool, error) {
-	return InputExists(ctx, boil.GetContextDB(), ref)
+func InputExistsG(ctx context.Context, iD int64) (bool, error) {
+	return InputExists(ctx, boil.GetContextDB(), iD)
 }
 
 // InputExists checks if the Input row exists.
-func InputExists(ctx context.Context, exec boil.ContextExecutor, ref string) (bool, error) {
+func InputExists(ctx context.Context, exec boil.ContextExecutor, iD int64) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"input\" where \"ref\"=$1 limit 1)"
+	sql := "select exists(select 1 from \"input\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
 		fmt.Fprintln(writer, sql)
-		fmt.Fprintln(writer, ref)
+		fmt.Fprintln(writer, iD)
 	}
-	row := exec.QueryRowContext(ctx, sql, ref)
+	row := exec.QueryRowContext(ctx, sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {

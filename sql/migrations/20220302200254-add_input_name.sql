@@ -1,11 +1,12 @@
 
 -- +migrate Up
 CREATE TABLE input (
-    ref VARCHAR UNIQUE NOT NULL PRIMARY KEY,
+    id BIGINT UNIQUE NOT NULL PRIMARY KEY,
     name VARCHAR UNIQUE NOT NULL,
-    owner VARCHAR NOT NULL,
+    owner_id BIGINT NOT NULL,
     inputType VARCHAR NOT NULL,
-    description VARCHAR NOT NULL
+    description VARCHAR NOT NULL,
+    version BIGINT NOT NULL
 );
 
 -- +migrate Down

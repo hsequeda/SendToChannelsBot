@@ -149,7 +149,7 @@ func testInputsExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := InputExists(ctx, tx, o.Ref)
+	e, err := InputExists(ctx, tx, o.ID)
 	if err != nil {
 		t.Errorf("Unable to check if Input exists: %s", err)
 	}
@@ -175,7 +175,7 @@ func testInputsFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	inputFound, err := FindInput(ctx, tx, o.Ref)
+	inputFound, err := FindInput(ctx, tx, o.ID)
 	if err != nil {
 		t.Error(err)
 	}
@@ -427,7 +427,7 @@ func testInputsSelect(t *testing.T) {
 }
 
 var (
-	inputDBTypes = map[string]string{`Ref`: `character varying`, `Name`: `character varying`, `Owner`: `character varying`, `Inputtype`: `character varying`, `Description`: `character varying`}
+	inputDBTypes = map[string]string{`ID`: `bigint`, `Name`: `character varying`, `OwnerID`: `bigint`, `Inputtype`: `character varying`, `Description`: `character varying`, `Version`: `bigint`}
 	_            = bytes.MinRead
 )
 

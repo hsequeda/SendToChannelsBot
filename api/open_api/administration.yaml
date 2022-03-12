@@ -1,25 +1,25 @@
 openapi: "3.0.0"
 info:
   version: 1.0.0
-  title: SendToChannel_Account
-  description: Account module REST API of the SendToChannel project.
+  title: SendToChannel_Administration
+  description: Administration module REST API of the SendToChannel project.
 servers:
-  - url: https://{hostname}/api/v1/account
+  - url: https://{hostname}/api/v1/administration
     variables:
       hostname:
         default: localhost
 security:
   - basicAuth: []
 paths:
-  /register:
+  /addInput:
     post:
-      operationId: register
+      operationId: addInput
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterReqBody'
+              $ref: '#/components/schemas/AddInputReqBody'
       responses:
         '200':
           content:
@@ -40,21 +40,28 @@ components:
       type: http
       scheme: basic
   schemas:
-    RegisterReqBody:
+    AddInputReqBody:
       type: object
-      required: [telegramId]
+      required: [userId, chatId, name, inputType, description]
       properties:
-        telegramId:
+        userId:
           type: integer
           format: int64
-
+        chatId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        inputType:
+          type: string
+        description:
+          type: string
     SuccessResp:
       type: object
       required: [success]
       properties:
         success:
           type: boolean
-
     ErrorResp:
       type: object
       required: [http_status, name]

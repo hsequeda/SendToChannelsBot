@@ -4,7 +4,7 @@ export
 # database
 .PHONY: migration_new
 migration_new:
-	sql-migrate new -config=sql/dbconfig.yml $(name) 
+	sql-migrate new -config=sql/dbconfig.yml $(name)
 
 .PHONY: migration_run
 migration_run:
@@ -35,3 +35,5 @@ run:
 generate_openapi_server:
 	oapi-codegen -generate types -o pkgs/account/port/rest/openapi_types.gen.go -package rest api/open_api/account.yml
 	oapi-codegen -generate chi-server -o pkgs/account/port/rest/openapi_api.gen.go -package rest api/open_api/account.yml
+	oapi-codegen -generate types -o pkgs/administration/port/rest/openapi_types.gen.go -package rest api/open_api/administration.yaml
+	oapi-codegen -generate chi-server -o pkgs/administration/port/rest/openapi_api.gen.go -package rest api/open_api/administration.yaml

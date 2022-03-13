@@ -23,7 +23,7 @@ type AddInputHandler struct {
 
 // NewAddInputHandler insantiate an instance of AddInputHandler.
 func NewAddInputHandler(inputFactory domain.InputFactory, inputRepository domain.InputRepository) AddInputHandler {
-	return AddInputHandler{inputFactory: inputFactory}
+	return AddInputHandler{inputFactory: inputFactory, inputRepository: inputRepository}
 }
 
 // Handle execute the AddInput command.
